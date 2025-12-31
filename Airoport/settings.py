@@ -19,6 +19,11 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'drf_spectacular',
+
+    'Flights.apps.FlightsConfig',
+    'Users.apps.UsersConfig',
+    'Airports.apps.AirportsConfig',
+    'airplanes.apps.AirplanesConfig',
 ]
 
 MIDDLEWARE = [
