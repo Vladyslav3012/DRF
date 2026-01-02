@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from .models import Airlines, Airplanes
+from .serializers import AirlinesSerializer, AirplanesSerializer
+from rest_framework import viewsets
 
-# Create your views here.
+class AirplanesAPI(viewsets.ModelViewSet):
+    serializer_class = AirplanesSerializer
+    queryset = Airplanes.objects.all()
+
+class AirlinesAPI(viewsets.ModelViewSet):
+    serializer_class = AirlinesSerializer
+    queryset = Airlines.objects.all()

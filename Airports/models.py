@@ -4,6 +4,7 @@ class Country(models.Model):
     title = models.CharField(max_length=100)
     capital = models.CharField(max_length=100)
 
+
     def __str__(self):
         return self.title
 
@@ -15,9 +16,9 @@ class Airports(models.Model):
     country = models.ForeignKey(
         Country,
         on_delete=models.CASCADE,
+        related_name="airports"
     )
 
 
     def __str__(self):
         return self.title
-
