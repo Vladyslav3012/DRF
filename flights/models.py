@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
+
+from users.models import CustomUser
 
 
 class Flights(models.Model):
@@ -47,7 +48,7 @@ class Ticket(models.Model):
     flight = models.ForeignKey(Flights,
                                on_delete=models.CASCADE,
                                related_name="tickets")
-    owner = models.ForeignKey(User,
+    owner = models.ForeignKey(CustomUser,
                               on_delete=models.CASCADE,
                               related_name="tickets"
     )

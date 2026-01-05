@@ -7,7 +7,7 @@ from rest_framework import viewsets
 
 
 
-class FlightsAPI(viewsets.ModelViewSet):
+class FlightsViewSet(viewsets.ModelViewSet):
     serializer_class = FlightsSerializer
     queryset = Flights.objects.all()
     filter_backends = [DjangoFilterBackend]
@@ -17,7 +17,7 @@ class FlightsAPI(viewsets.ModelViewSet):
 
 
 
-class TicketAPI(viewsets.ModelViewSet):
+class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     queryset = Ticket.objects.all()
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrAdmin )
