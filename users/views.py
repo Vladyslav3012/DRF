@@ -10,4 +10,3 @@
 #     queryset = CustomUser.objects.all()
 #     serializer_class = CustomUserSerializer
 #     permission_classes = []
-#

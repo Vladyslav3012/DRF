@@ -1,21 +1,26 @@
 from rest_framework import serializers
-from rest_framework.settings import api_settings
 from airplanes.models import Airplanes
 
 from .models import Ticket, Flights
+
 
 class FlightsSerializer(serializers.ModelSerializer):
     airplanes = serializers.SlugRelatedField(
         slug_field="model",
         queryset=Airplanes.objects.all()
     )
-    flight_status_name = serializers.CharField(source="get_flight_status_display", read_only=True)
+    flight_status_name = serializers.CharField(
+        source="get_flight_status_display",
+        read_only=True
+    )
+
     class Meta:
         model = Flights
-        fields = ['id', 'flight_status','flight_status_name', 'flight_status',
+        fields = ['id', 'flight_status', 'flight_status_name', 'flight_status',
                   'city_departure', 'city_arrival',
                   'time_departure', 'time_arrival', 'tickets_count',
                   'airplanes']
+
     def validate(self, attrs):
         if attrs.get('time_departure') > attrs.get('time_arrival'):
             raise serializers.ValidationError("Час прибуття не може бути пізнішим"
@@ -28,20 +33,27 @@ class FlightsSerializer(serializers.ModelSerializer):
                                               "за кількість місць на борту")
         return attrs
 
+
 class TicketRetrieveSerializer(serializers.ModelSerializer):
-    ticket_class_name = serializers.CharField(source="get_ticket_class_display", read_only=True)
+    ticket_class_name = serializers.CharField(
+        source="get_ticket_class_display",
+        read_only=True)
+
     class Meta:
         model = Ticket
         fields = ['id', 'ticket_class', 'ticket_class_name', 'flight', 'owner']
         read_only_fields = ['id']
 
+
 class TicketListSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ticket_class_name = serializers.CharField(source="get_ticket_class_display", read_only=True)
     owner_only_to_admin = serializers.SerializerMethodField()
+
     class Meta:
         model = Ticket
         fields = ['ticket_class_name', 'flight', 'owner', 'owner_only_to_admin']
+
     def get_owner_only_to_admin(self, obj):
         if self.context.get('is_admin'):
             return obj.owner.username
@@ -50,10 +62,7 @@ class TicketListSerializer(serializers.ModelSerializer):
 
 class TicketCreateSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Ticket
         fields = ['ticket_class', 'flight', 'time_of_purchase', 'owner']
-
-
-
-
