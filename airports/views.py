@@ -22,7 +22,7 @@ class AirportsListAPIView(APIView):
         serializer = AirportListSerializer(airports, many=True)
         return Response(serializer.data)
     def post(self, request):
-        serializer = AirportListSerializer(data=request.data)
+        serializer = AirportsRetrieveSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

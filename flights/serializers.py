@@ -28,10 +28,32 @@ class FlightsSerializer(serializers.ModelSerializer):
                                               "за кількість місць на борту")
         return attrs
 
-class TicketSerializer(serializers.ModelSerializer):
+class TicketRetrieveSerializer(serializers.ModelSerializer):
     ticket_class_name = serializers.CharField(source="get_ticket_class_display", read_only=True)
+    class Meta:
+        model = Ticket
+        fields = ['id', 'ticket_class', 'ticket_class_name', 'flight', 'owner']
+        read_only_fields = ['id']
+
+class TicketListSerializer(serializers.ModelSerializer):
+    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    ticket_class_name = serializers.CharField(source="get_ticket_class_display", read_only=True)
+    owner_only_to_admin = serializers.SerializerMethodField()
+    class Meta:
+        model = Ticket
+        fields = ['ticket_class_name', 'flight', 'owner', 'owner_only_to_admin']
+    def get_owner_only_to_admin(self, obj):
+        if self.context.get('is_admin'):
+            return obj.owner.username
+        return None
+
+
+class TicketCreateSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Ticket
-        fields = ['ticket_class', 'ticket_class_name', 'flight', 'owner']
+        fields = ['ticket_class', 'flight', 'time_of_purchase', 'owner']
+
+
+
 

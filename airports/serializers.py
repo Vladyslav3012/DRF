@@ -13,9 +13,13 @@ class CountryListSerializer(serializers.ModelSerializer):
         fields = ['title', 'capital']
 
 class AirportListSerializer(serializers.ModelSerializer):
+    country = serializers.SlugRelatedField(
+        slug_field="title",
+        queryset=Country.objects.all()
+    )
     class Meta:
         model = Airports
-        fields = ['title', 'address', 'contact']
+        fields = ['title', 'address', 'contact', 'country']
 
 
 class AirportsRetrieveSerializer(serializers.ModelSerializer):
