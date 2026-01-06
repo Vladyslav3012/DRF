@@ -15,9 +15,6 @@ class FlightsViewSet(viewsets.ModelViewSet):
     filterset_fields = ['time_departure', ]
 
 
-
-
-
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrAdmin )
