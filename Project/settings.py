@@ -42,7 +42,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Airoport.urls'
+ROOT_URLCONF = 'Project.urls'
 
 TEMPLATES = [
     {
@@ -59,7 +59,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Airoport.wsgi.application'
+WSGI_APPLICATION = 'Project.wsgi.application'
 
 # DATABASES = {
 #     'default': {
@@ -121,7 +121,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
-        'custom_permission.IsAdminOrReadOnly',
+          'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_FILTER_BACKENDS':
         ['django_filters.rest_framework.DjangoFilterBackend'],
@@ -140,3 +140,10 @@ SPECTACULAR_SETTINGS = {
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
 }
+#
+# DJOSER = {
+#     "USER_CREATE_FIELDS": ("username", "email", "password", "age"),
+#     "SERIALIZERS": {
+#         "user_create": "users.serializers.CustomUserCreateSerializer",
+#     },
+# }

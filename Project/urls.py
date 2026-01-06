@@ -10,6 +10,7 @@ from airports.views import (AirportsListAPIView, AirportsRetrieveApiView,
 
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet, TicketViewSet
+# from users.views import UserViewSet
 
 router = DefaultRouter()
 
@@ -17,6 +18,7 @@ router.register(r'airlines', AirlinesViewSet)
 router.register(r'airplanes', AirplanesViewSet)
 router.register(r'flights', FlightsViewSet)
 router.register(r'tickets', TicketViewSet, basename="tickets")
+# router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,11 +29,11 @@ urlpatterns = [
 
     path('api/v1/country/', CountryListModelAPIView.as_view()),
     path('api/v1/country/<int:pk>', CountryRetrieveModelAPIView.as_view()),
-    re_path(r'^auth/', include('djoser.urls')),
-    re_path(r'^auth/', include('djoser.urls.jwt')),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    re_path(r'^auth/', include('djoser.urls')),
+    re_path(r'^auth/', include('djoser.urls.jwt')),
 
 ]

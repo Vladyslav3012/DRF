@@ -3,7 +3,8 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    age = models.PositiveIntegerField(blank=True, null=True)
+    age = models.PositiveIntegerField()
+
 
     def __str__(self):
         return self.username
