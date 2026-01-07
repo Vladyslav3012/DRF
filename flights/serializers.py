@@ -23,14 +23,14 @@ class FlightsSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs.get('time_departure') > attrs.get('time_arrival'):
-            raise serializers.ValidationError("Час прибуття не може бути пізнішим"
-                                              "за виліт")
+            raise serializers.ValidationError("Departure time cannot be "
+                                              "later than arrival time.")
         if attrs.get('city_departure').lower() == attrs.get('city_arrival').lower():
-            raise serializers.ValidationError("Місце прибуття повинно відрізнятись"
-                                              "від місця вильоту")
+            raise serializers.ValidationError("The arrival location must be different"
+                                              "from the departure location")
         if attrs.get('tickets_count') > attrs.get('airplanes').count_of_seats:
-            raise serializers.ValidationError("Кількість квитків не може бути більшою"
-                                              "за кількість місць на борту")
+            raise serializers.ValidationError("The number of tickets cannot be more"
+                                              "than the number of seats on board")
         return attrs
 
 
