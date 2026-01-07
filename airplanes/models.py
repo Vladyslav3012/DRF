@@ -2,6 +2,7 @@ from django.utils import timezone
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 class Airlines(models.Model):
     title = models.CharField(max_length=100, unique=True)
     detail = models.TextField()
