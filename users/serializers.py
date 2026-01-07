@@ -1,11 +1,29 @@
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer
+from rest_framework.validators import ValidationError
 from flights.models import Ticket
 from .models import CustomUser
 
 
-# class CustomUserSerializer(UserCreateSerializer):
-#     ticket = serializers.StringRelatedField(many=True)
-#     class Meta:
-#         model = CustomUser
-#         fields = ["id", "username", "email", "password", "age", "ticket"]
+class CustomUserSignInSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=100)
+    username = serializers.CharField(max_length=50)
+    age = serializers.IntegerField(min_value=1, max_value=120)
+    password = serializers.CharField(min_length=8, write_only=True, max_length=50)
+
+    class Meta:
+        model = CustomUser
+        fields = ["email", "username", "password", "age"]
+
+    def validate(self, attrs):
+        email_exists = CustomUser.objects.filter(email=attrs['email']).exists()
+        username_exists = CustomUser.objects.filter(username=attrs['username']).exists()
+        if email_exists or username_exists:
+            raise ValidationError("This username or email has been used")
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        user = CustomUser(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
