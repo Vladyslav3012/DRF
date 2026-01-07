@@ -11,6 +11,7 @@ from airports.views import (AirportsListAPIView, AirportsRetrieveApiView,
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet, TicketViewSet
 # from users.views import UserViewSet
+from airports import urls as AirportURLS
 
 router = DefaultRouter()
 
@@ -22,13 +23,9 @@ router.register(r'tickets', TicketViewSet, basename="tickets")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('api/v1/', include(router.urls)),
-
-    path('api/v1/airports/', AirportsListAPIView.as_view()),
-    path('api/v1/airports/<int:pk>/', AirportsRetrieveApiView.as_view()),
-
-    path('api/v1/country/', CountryListModelAPIView.as_view()),
-    path('api/v1/country/<int:pk>', CountryRetrieveModelAPIView.as_view()),
+    path('api/v1/country', include(AirportURLS)),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
