@@ -18,19 +18,14 @@ class CountryListModelAPIView(generics.ListCreateAPIView):
     queryset = Country.objects.all()
 
 
-class AirportsListAPIView(APIView):
-    def get(self, request):
-        airports = Airports.objects.all()
-        serializer = AirportListSerializer(airports, many=True)
-        return Response(serializer.data)
+class AirportsListAPIView(generics.ListCreateAPIView):
+    queryset = Airports.objects.all()
 
-    def post(self, request):
-        serializer = AirportsRetrieveSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
-
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AirportsRetrieveSerializer
+        else:
+            return AirportListSerializer
 
 class AirportsRetrieveApiView(generics.GenericAPIView):
     serializer_class = AirportsRetrieveSerializer

@@ -41,12 +41,11 @@ class TicketRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ['id', 'ticket_class', 'ticket_class_name', 'flight', 'owner']
-        read_only_fields = ['id']
+        fields = ['id', 'ticket_class', 'ticket_class_name', 'flight']
+        read_only_fields = ['id', 'owner']
 
 
 class TicketListSerializer(serializers.ModelSerializer):
-    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ticket_class_name = serializers.CharField(source="get_ticket_class_display", read_only=True)
     owner_only_to_admin = serializers.SerializerMethodField()
 
