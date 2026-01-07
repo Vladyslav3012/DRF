@@ -9,6 +9,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'users.CustomUser'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,9 +23,9 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
 
-    'Flights.apps.FlightsConfig',
-    'Users.apps.UsersConfig',
-    'Airports.apps.AirportsConfig',
+    'flights.apps.FlightsConfig',
+    'users.apps.UsersConfig',
+    'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
 ]
 

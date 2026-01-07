@@ -1,7 +1,7 @@
 from django.db import models
 
 class Country(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     capital = models.CharField(max_length=100)
 
 
@@ -10,7 +10,7 @@ class Country(models.Model):
 
 
 class Airports(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     address = models.CharField(max_length=200)
     contact = models.CharField(max_length=200)
     country = models.ForeignKey(
