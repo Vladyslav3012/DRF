@@ -9,6 +9,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'users.CustomUser'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -20,10 +22,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'django_filters',
+    'djoser',
+    'rest_framework_simplejwt',
+    'rest_framework.authtoken',
 
-    'Flights.apps.FlightsConfig',
-    'Users.apps.UsersConfig',
-    'Airports.apps.AirportsConfig',
+    'flights.apps.FlightsConfig',
+    'users.apps.UsersConfig',
+    'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
 ]
 
@@ -37,7 +42,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Airoport.urls'
+ROOT_URLCONF = 'Project.urls'
 
 TEMPLATES = [
     {
@@ -54,7 +59,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Airoport.wsgi.application'
+WSGI_APPLICATION = 'Project.wsgi.application'
 
 # DATABASES = {
 #     'default': {
@@ -90,9 +95,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'UK'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Kiev'
 
 USE_I18N = True
 
@@ -102,6 +107,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 REST_FRAMEWORK = {
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -111,12 +121,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
-        'custom_permission.IsAdminOrReadOnly',
+          'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_FILTER_BACKENDS':
         ['django_filters.rest_framework.DjangoFilterBackend'],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-        "PAGE_SIZE": 5  ,
+        "PAGE_SIZE": 5,
 }
 
 
@@ -126,3 +136,14 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+SIMPLE_JWT = {
+   'AUTH_HEADER_TYPES': ('JWT',),
+}
+#
+# DJOSER = {
+#     "USER_CREATE_FIELDS": ("username", "email", "password", "age"),
+#     "SERIALIZERS": {
+#         "user_create": "users.serializers.CustomUserCreateSerializer",
+#     },
+# }

@@ -2,12 +2,13 @@ from django.utils import timezone
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 class Airlines(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     detail = models.TextField()
-    data_of_create = models.DateField()
+    data_of_create = models.DateField(auto_now_add=True)
     slogan = models.CharField(max_length=200)
-    airport = models.ForeignKey("Airports.Airports",
+    airport = models.ForeignKey("airports.airports",
                                 on_delete=models.SET_NULL,
                                 null=True,
                                 related_name="airlines")
@@ -21,7 +22,7 @@ class Airlines(models.Model):
 
 
 class Airplanes(models.Model):
-    model = models.CharField(max_length=100)
+    model = models.CharField(max_length=100, unique=True)
     count_of_seats = models.PositiveSmallIntegerField()
     airlines = models.ForeignKey("Airlines",
                                  on_delete=models.SET_NULL,
