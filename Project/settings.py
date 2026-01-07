@@ -22,9 +22,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'django_filters',
-    'djoser',
-    'rest_framework_simplejwt',
-    'rest_framework.authtoken',
 
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
@@ -140,10 +137,3 @@ SPECTACULAR_SETTINGS = {
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
 }
-#
-# DJOSER = {
-#     "USER_CREATE_FIELDS": ("username", "email", "password", "age"),
-#     "SERIALIZERS": {
-#         "user_create": "users.serializers.CustomUserCreateSerializer",
-#     },
-# }
