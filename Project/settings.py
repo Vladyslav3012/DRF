@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 
@@ -22,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'django_filters',
+    'rest_framework.authtoken',
 
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
@@ -107,6 +109,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': [
@@ -135,5 +138,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('JWT',),
 }
