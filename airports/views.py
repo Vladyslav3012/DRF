@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import Airports, Country
 from .serializers import (AirportListSerializer, AirportsRetrieveSerializer,
@@ -26,6 +25,7 @@ class AirportsListAPIView(generics.ListCreateAPIView):
             return AirportsRetrieveSerializer
         else:
             return AirportListSerializer
+
 
 class AirportsRetrieveApiView(generics.GenericAPIView):
     serializer_class = AirportsRetrieveSerializer

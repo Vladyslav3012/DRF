@@ -31,7 +31,8 @@ class Flights(models.Model):
 
     def clean(self):
         if self.time_departure >= self.time_arrival:
-            raise ValidationError("Departure time cannot be later than arrival time")
+            raise ValidationError("Departure time cannot"
+                                  " be later than arrival time")
         if self.city_departure == self.city_arrival:
             raise ValidationError("Cities cannot match")
         if self.tickets_count > self.airplanes.count_of_seats:

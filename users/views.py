@@ -4,18 +4,19 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import CustomUser
-from rest_framework.authtoken.models import Token
 from .serializers import CustomUserRegisterSerializer, UserLogInSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 
+
 User = get_user_model()
+
 
 def get_user_token(user: User):
     refresh = RefreshToken.for_user(user)
     tokens = {"access": str(refresh.access_token), "refresh": str(refresh)}
     return tokens
+
 
 class SignUpView(generics.GenericAPIView):
     serializer_class = CustomUserRegisterSerializer
@@ -26,6 +27,7 @@ class SignUpView(generics.GenericAPIView):
             serializer.save()
             return Response({"msg": "User create successful", "data": serializer.data})
         return Response(serializer.errors)
+
 
 class LogInView(APIView):
     @extend_schema(request=UserLogInSerializer)
@@ -40,7 +42,7 @@ class LogInView(APIView):
                              "token": token})
         return Response(data={"msg": "Invalid email or password"})
 
-    def get(self, request:Request):
+    def get(self, request: Request):
         content = {
             "user": str(request.user),
             "auth": str(request.auth)

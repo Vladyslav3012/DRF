@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
-from flights.models import Ticket
 from .models import CustomUser
 from rest_framework.authtoken.models import Token
 

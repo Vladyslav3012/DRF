@@ -25,7 +25,7 @@ class AirportListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Airports
-        fields = ['id','title', 'country']
+        fields = ['id', 'title', 'country']
 
 
 class AirportsRetrieveSerializer(serializers.ModelSerializer):
