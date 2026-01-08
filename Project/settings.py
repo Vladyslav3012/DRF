@@ -1,10 +1,14 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-&*or*5g4^!kg4rj+uyss759=ya0k329&b)2l%81)gk=^!$@not'
+load_dotenv(BASE_DIR / ".env")
+
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = True
 
@@ -70,14 +74,15 @@ WSGI_APPLICATION = 'Project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Airports',
-        'USER': 'postgres',
-        'PASSWORD': 'VlaDick_228',
-        'HOST': 'localhost',
-        'POST': '5432',
+        'ENGINE': os.environ["DATABASE_ENGINE"],
+        'NAME': os.environ["DATABASE_NAME"],
+        'USER': os.environ["DATABASE_USER"],
+        'PASSWORD': os.environ["DATABASE_PASSWORD"],
+        'HOST': os.environ["DATABASE_HOST"],
+        'POST': os.environ["DATABASE_POST"],
     }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -138,7 +143,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    'AUTH_HEADER_TYPES': ('JWT',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=int(os.environ["ACCESS_TOKEN_LIFETIME"])),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ["REFRESH_TOKEN_LIFETIME"])),
+    "AUTH_HEADER_TYPES": (os.environ["AUTH_HEADER_TYPES"],),
 }
