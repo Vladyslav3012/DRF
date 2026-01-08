@@ -6,11 +6,11 @@ from users.models import CustomUser
 
 class Flights(models.Model):
     status_choice = [
-        ('scheduled', 'Запланований'),
-        ('boarding', 'Посадка'),
-        ('departed', 'Вилетів'),
-        ('delayed', 'Затриманий'),
-        ('cancelled', 'Відмінений')
+        ('scheduled', 'Scheduled'),
+        ('boarding', 'Boarding'),
+        ('departed', 'Departed'),
+        ('delayed', 'Delayed'),
+        ('cancelled', 'Cancelled')
     ]
 
     flight_status = models.CharField(max_length=20,
@@ -31,20 +31,21 @@ class Flights(models.Model):
 
     def clean(self):
         if self.time_departure >= self.time_arrival:
-            raise ValidationError("Час прибуття має бути пізніше за виліт ")
+            raise ValidationError("Departure time cannot"
+                                  " be later than arrival time")
         if self.city_departure == self.city_arrival:
-            raise ValidationError("Міста не можуть співпадати")
+            raise ValidationError("Cities cannot match")
         if self.tickets_count > self.airplanes.count_of_seats:
-            raise ValidationError(f"Кількість квитків ({self.tickets_count}) "
-                                  f"більше чим місць на борту "
+            raise ValidationError(f"Count of tickets ({self.tickets_count}) "
+                                  f"more than seats on board"
                                   f"({self.airplanes.count_of_seats})")
 
 
 class Ticket(models.Model):
     ENUM = [
-        ('econom', 'Низький клас'),
-        ('business', 'Бізнес клас'),
-        ('first', 'Перший клас'),
+        ('econom', 'Econom class'),
+        ('business', 'Business class'),
+        ('first', 'First class'),
     ]
     ticket_class = models.CharField(max_length=20, choices=ENUM,
                                     default='econom')

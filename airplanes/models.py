@@ -18,7 +18,8 @@ class Airlines(models.Model):
 
     def clean(self):
         if self.data_of_create > timezone.now().date():
-            raise ValidationError("Час створення не можу бути у майбутньому")
+            raise ValidationError("The time of creation "
+                                  "cannot be in the future.")
 
 
 class Airplanes(models.Model):
