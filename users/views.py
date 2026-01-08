@@ -20,6 +20,7 @@ def get_user_token(user: User):
 
 class SignUpView(generics.GenericAPIView):
     serializer_class = CustomUserRegisterSerializer
+    permission_classes = []
 
     def post(self, request: Request):
         serializer = self.get_serializer(data=request.data)
@@ -30,6 +31,7 @@ class SignUpView(generics.GenericAPIView):
 
 
 class LogInView(APIView):
+    permission_classes = []
     @extend_schema(request=UserLogInSerializer)
     def post(self, request: Request):
         email = request.data.get('email')
