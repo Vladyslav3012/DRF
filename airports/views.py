@@ -19,6 +19,7 @@ class CountryListModelAPIView(generics.ListCreateAPIView):
     queryset = Country.objects.all()
     permission_classes = [IsAdminOrReadOnly]
 
+
 class AirportsListAPIView(generics.ListCreateAPIView):
     queryset = Airports.objects.all()
     permission_classes = [IsAdminOrReadOnly]

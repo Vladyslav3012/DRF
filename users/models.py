@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -39,3 +41,35 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Order(models.Model):
+    class StatusChoice(models.TextChoices):
+        PENDING = "Pending", "Pending"
+        CONFIRMED = "Confirmed", "Confirmed"
+        CANCELLED = "Cancelled", "Cancelled"
+
+    class CurrencyChoice(models.TextChoices):
+        USD = "usd", "USD"
+        UAH = "uah", "UAH"
+        EURO = "eur", "EUR"
+
+    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    owner = models.ForeignKey(CustomUser,
+                              on_delete=models.CASCADE,
+                              related_name="orders")
+    currency = models.CharField(max_length=10,
+                                choices=CurrencyChoice.choices,
+                                default=CurrencyChoice.USD)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10,
+                              choices=StatusChoice.choices,
+                              default=StatusChoice.PENDING)
+    quantity = models.PositiveIntegerField()
+
+    @property
+    def total_price(self):
+        return sum(ticket.price for ticket in self.tickets.all())
+
+    def __str__(self):
+        return f"Order {self.order_id} by {self.owner.username}"

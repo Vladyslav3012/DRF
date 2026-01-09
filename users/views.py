@@ -1,10 +1,13 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
+from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import CustomUserRegisterSerializer, UserLogInSerializer
+from .models import Order
+from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
+                          OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate)
 from rest_framework.response import Response
 from rest_framework.request import Request
 
@@ -32,6 +35,7 @@ class SignUpView(generics.GenericAPIView):
 
 class LogInView(APIView):
     permission_classes = []
+
     @extend_schema(request=UserLogInSerializer)
     def post(self, request: Request):
         email = request.data.get('email')
@@ -50,3 +54,24 @@ class LogInView(APIView):
             "auth": str(request.auth)
         }
         return Response(data=content)
+
+
+class OrderListCreateApiView(generics.ListCreateAPIView):
+
+    def get_queryset(self):
+        return Order.objects.filter(owner=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return OrderCreateSerializer
+        return OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=self.request.user)
+
+
+class OrderUpdateApiView(generics.UpdateAPIView):
+    permission_classes = [IsAdminUser]
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializerForUpdate

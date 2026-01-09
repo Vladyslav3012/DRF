@@ -2,7 +2,6 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-import rest_framework.permissions
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -114,7 +113,6 @@ STATIC_URL = 'static/'
 REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
