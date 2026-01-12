@@ -1,15 +1,20 @@
+from collections import Counter
+
+from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import ValidationError
 
 from .models import Order
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate)
 from rest_framework.response import Response
 from rest_framework.request import Request
+from flights.models import Flights
 
 
 User = get_user_model()
@@ -66,8 +71,36 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
             return OrderCreateSerializer
         return OrderSerializer
 
+
+    @transaction.atomic
     def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
+        tickets = serializer.validated_data["tickets"]
+        flight = tickets[0]["flight"]
+
+        tickets_by_class = Counter(
+            ticket["ticket_class"] for ticket in tickets
+        )
+
+        flight = (
+            Flights.objects
+            .select_for_update()
+            .get(pk=flight.pk)
+        )
+
+        if tickets_by_class.get("economy", 0) > flight.tickets_count_economy:
+            raise ValidationError("Not enough economy seats")
+
+        if tickets_by_class.get("business", 0) > flight.tickets_count_business:
+            raise ValidationError("Not enough business seats")
+
+        if tickets_by_class.get("first", 0) > flight.tickets_count_first:
+            raise ValidationError("Not enough first class seats")
+
+        flight.tickets_count_economy -= tickets_by_class.get("economy", 0)
+        flight.tickets_count_business -= tickets_by_class.get("business", 0)
+        flight.tickets_count_first -= tickets_by_class.get("first", 0)
+        flight.save()
+
         serializer.save(owner=self.request.user)
 
 

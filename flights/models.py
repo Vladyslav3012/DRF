@@ -31,11 +31,18 @@ class Flights(models.Model):
                                   on_delete=models.CASCADE,
                                   related_name="flights")
 
+
     @property
     def average_price(self):
-        return str((self.ticket_economy_price
-                    + self.ticket_business_price
-                    + self.ticket_first_price) / 3) + "$"
+        all_price = [self.ticket_economy_price,
+                     self.ticket_first_price,
+                     self.ticket_business_price]
+        total_price = [price for price in all_price if price > 0]
+        if not total_price:
+            return None
+
+        return sum(total_price) / Decimal(len(total_price))
+
 
     @property
     def total_tickets(self):
