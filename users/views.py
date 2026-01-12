@@ -64,7 +64,10 @@ class LogInView(APIView):
 class OrderListCreateApiView(generics.ListCreateAPIView):
 
     def get_queryset(self):
-        return Order.objects.filter(owner=self.request.user)
+        return Order.objects.filter(owner=self.request.user).prefetch_related(
+            'tickets',
+            'tickets__flight'
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":

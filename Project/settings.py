@@ -12,7 +12,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'rest_framework.authtoken',
+    'silk',
 
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
@@ -43,6 +44,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'Project.urls'
