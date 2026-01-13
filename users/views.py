@@ -167,21 +167,24 @@ class StripeWebhookAPIView(APIView):
 
     def post(self, request):
         try:
+            header = request.META["HTTP_STRIPE_SIGNATURE"]
+            if not header:
+                return HttpResponse(status=400)
             event = stripe.Webhook.construct_event(
                 request.body,
-                request.META["HTTP_STRIPE_SIGNATURE"],
+                header,
                 settings.STRIPE_WEBHOOK_SECRET,
             )
-        except ValueError:
+        except Exception:
             return HttpResponse(status=400)
-        except stripe.error.SignatureVerificationError:
+        try:
+            if event["type"] == "checkout.session.completed":
+                session = event["data"]["object"]
+                session_id = session['id']
+                order = Order.objects.filter(stripe_checkout_session=session_id)
+                order.update(status="Confirmed")
+        except Exception:
             return HttpResponse(status=400)
-
-        if event["type"] == "checkout.session.completed":
-            session = event["data"]["object"]
-            session_id = session['id']
-            order = Order.objects.filter(stripe_checkout_session=session_id)
-            order.update(status="Confirmed")
         return HttpResponse(status=200)
 
 
