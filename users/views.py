@@ -82,7 +82,7 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
 
         tickets_by_class = Counter(
             ticket["ticket_class"] for ticket in tickets
-        )
+        ) # --> {"economy": 1, "business": 1}
 
         flight = (
             Flights.objects
