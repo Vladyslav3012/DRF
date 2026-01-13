@@ -47,7 +47,7 @@ class Order(models.Model):
     class StatusChoice(models.TextChoices):
         PENDING = "Pending", "Pending"
         CONFIRMED = "Confirmed", "Confirmed"
-        CANCELLED = "Cancelled", "Cancelled"
+        EXPIRED = "Expired", "Expired"
 
     class CurrencyChoice(models.TextChoices):
         USD = "usd", "USD"
@@ -55,6 +55,9 @@ class Order(models.Model):
         EURO = "eur", "EUR"
 
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    stripe_checkout_session = models.CharField(max_length=255,
+                                               blank=True,
+                                               null=True)
     owner = models.ForeignKey(CustomUser,
                               on_delete=models.CASCADE,
                               related_name="orders")

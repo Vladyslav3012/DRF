@@ -1,8 +1,14 @@
 from collections import Counter
+import stripe
+from django.http import HttpResponse, JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
+from Project import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
@@ -111,3 +117,76 @@ class OrderUpdateApiView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     queryset = Order.objects.all()
     serializer_class = OrderSerializerForUpdate
+
+
+YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+class StripeApiView(generics.GenericAPIView):
+    def post(self, request: Request, order_id):
+        order = Order.objects.prefetch_related(
+            "tickets"
+        ).get(order_id=order_id)
+
+        line_items = []
+
+        for ticket in order.tickets.all():
+            line_items.append({
+                "price_data": {
+                    "currency": order.currency,
+                    "product_data": {
+                        "name": f"Ticket #{ticket.id}",
+                    },
+                    "unit_amount": int(ticket.price * 100),
+                },
+                "quantity": 1,
+            })
+
+        check_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=YOUR_DOMAIN + "/success",
+            cancel_url=YOUR_DOMAIN + "/cancel",
+            metadata={
+                "order_id": str(order.order_id),
+                "user_id": request.user.id,
+            },
+        )
+        order.stripe_checkout_session = check_session.id
+        order.save()
+
+        return Response({
+            "checkout_url": check_session.url
+        })
+
+@method_decorator(csrf_exempt, name="dispatch")
+class StripeWebhookAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        try:
+            event = stripe.Webhook.construct_event(
+            request.body,
+            request.META["HTTP_STRIPE_SIGNATURE"],
+            settings.STRIPE_WEBHOOK_SECRET,
+            )
+        except ValueError as e:
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            return HttpResponse(status=400)
+
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            session_id = session['id']
+            order = Order.objects.filter(stripe_checkout_session = session_id)
+            order.update(status="Confirmed")
+        return HttpResponse(status=200)
+
+
+def success(request):
+    return JsonResponse({"msg": "success"})
+
+def cancel(request):
+    return JsonResponse({"msg": "cancel"})

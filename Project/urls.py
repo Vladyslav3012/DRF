@@ -11,6 +11,7 @@ import users.urls
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet
 from airports import urls as AirportUrls
+from users.views import cancel, success
 
 router = DefaultRouter()
 
@@ -20,6 +21,9 @@ router.register(r'flights', FlightsViewSet)
 
 
 urlpatterns = [
+    path('success/', success, name='success'),
+    path('cancel/', cancel, name='cancel'),
+
     path('admin/', admin.site.urls),
 
     path('api/v1/', include(router.urls)),
