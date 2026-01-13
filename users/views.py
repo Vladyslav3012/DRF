@@ -8,7 +8,6 @@ from Project import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
@@ -80,7 +79,6 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
             return OrderCreateSerializer
         return OrderSerializer
 
-
     @transaction.atomic
     def perform_create(self, serializer):
         tickets = serializer.validated_data["tickets"]
@@ -122,6 +120,7 @@ class OrderUpdateApiView(generics.UpdateAPIView):
 YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
 class StripeApiView(generics.GenericAPIView):
     def post(self, request: Request, order_id):
         order = Order.objects.prefetch_related(
@@ -160,6 +159,7 @@ class StripeApiView(generics.GenericAPIView):
             "checkout_url": check_session.url
         })
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookAPIView(APIView):
     authentication_classes = []
@@ -168,25 +168,26 @@ class StripeWebhookAPIView(APIView):
     def post(self, request):
         try:
             event = stripe.Webhook.construct_event(
-            request.body,
-            request.META["HTTP_STRIPE_SIGNATURE"],
-            settings.STRIPE_WEBHOOK_SECRET,
+                request.body,
+                request.META["HTTP_STRIPE_SIGNATURE"],
+                settings.STRIPE_WEBHOOK_SECRET,
             )
-        except ValueError as e:
+        except ValueError:
             return HttpResponse(status=400)
-        except stripe.error.SignatureVerificationError as e:
+        except stripe.error.SignatureVerificationError:
             return HttpResponse(status=400)
 
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
             session_id = session['id']
-            order = Order.objects.filter(stripe_checkout_session = session_id)
+            order = Order.objects.filter(stripe_checkout_session=session_id)
             order.update(status="Confirmed")
         return HttpResponse(status=200)
 
 
 def success(request):
     return JsonResponse({"msg": "success"})
+
 
 def cancel(request):
     return JsonResponse({"msg": "cancel"})

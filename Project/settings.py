@@ -2,7 +2,6 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from django.conf.global_settings import CSRF_TRUSTED_ORIGINS
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -151,4 +150,3 @@ SIMPLE_JWT = {
 STRIPE_PUBLIC_KEY = os.environ["STRIPE_PUBLIC_KEY"]
 STRIPE_SECRET_KEY = os.environ["STRIPE_SECRET_KEY"]
 STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
-
