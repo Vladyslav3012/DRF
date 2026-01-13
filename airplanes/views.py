@@ -1,13 +1,27 @@
+from custom_permission import IsAdminOrReadOnly
 from .models import Airlines, Airplanes
-from .serializers import AirlinesSerializer, AirplanesSerializer
+from .serializers import (AirlinesRetrieveSerializer,
+                          AirlinesListSerializer,
+                          AirplanesListSerializer,
+                          AirplanesRetrieveSerializer)
 from rest_framework import viewsets
 
 
 class AirplanesViewSet(viewsets.ModelViewSet):
-    serializer_class = AirplanesSerializer
     queryset = Airplanes.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return AirplanesListSerializer
+        return AirplanesRetrieveSerializer
 
 
 class AirlinesViewSet(viewsets.ModelViewSet):
-    serializer_class = AirlinesSerializer
     queryset = Airlines.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return AirlinesListSerializer
+        return AirlinesRetrieveSerializer
