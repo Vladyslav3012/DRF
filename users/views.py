@@ -119,9 +119,12 @@ class OrderUpdateApiView(generics.UpdateAPIView):
 
 class StripeApiView(generics.GenericAPIView):
     def post(self, request: Request, order_id):
-        order = Order.objects.prefetch_related(
+        try:
+            order = Order.objects.prefetch_related(
             "tickets"
         ).get(order_id=order_id, owner=request.user)
+        except Exception:
+            return Response({"msg": "Invalid order_id please send correct order_id"})
         #get order from database by order id,
         #and check whether owner=request.user
 
