@@ -177,14 +177,16 @@ class StripeWebhookAPIView(APIView):
             )
         except Exception:
             return HttpResponse(status=400)
-        try:
-            if event["type"] == "checkout.session.completed":
-                session = event["data"]["object"]
-                session_id = session['id']
-                order = Order.objects.filter(stripe_checkout_session=session_id)
-                order.update(status="Confirmed")
-        except Exception:
-            return HttpResponse(status=400)
+        session = event["data"]["object"]
+        session_id = session['id']
+
+        if event["type"] == "checkout.session.completed":
+            order = Order.objects.filter(stripe_checkout_session=session_id)
+            order.update(status="Confirmed")
+        elif event["type"] == "checkout.session.expired":
+            order = Order.objects.filter(stripe_checkout_session=session_id)
+            order.update(status="Expired")
+
         return HttpResponse(status=200)
 
 
