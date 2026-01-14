@@ -1,10 +1,8 @@
 from collections import Counter
-import stripe
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-from Project import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
@@ -20,6 +18,8 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
+
+from .service import stripe_session_check, webhook_check
 
 
 User = get_user_model()
@@ -117,43 +117,20 @@ class OrderUpdateApiView(generics.UpdateAPIView):
     serializer_class = OrderSerializerForUpdate
 
 
-YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
-
 class StripeApiView(generics.GenericAPIView):
     def post(self, request: Request, order_id):
         order = Order.objects.prefetch_related(
             "tickets"
-        ).get(order_id=order_id)
+        ).get(order_id=order_id, owner=request.user)
+        #get order from database by order id,
+        #and check whether owner=request.user
 
-        line_items = []
+        check_session = stripe_session_check(order=order, user_id=request.user.id)
+        #use func from .service, she has all the logic
 
-        for ticket in order.tickets.all():
-            line_items.append({
-                "price_data": {
-                    "currency": order.currency,
-                    "product_data": {
-                        "name": f"Ticket #{ticket.id}",
-                    },
-                    "unit_amount": int(ticket.price * 100),
-                },
-                "quantity": 1,
-            })
-
-        check_session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode="payment",
-            success_url=YOUR_DOMAIN + "/success",
-            cancel_url=YOUR_DOMAIN + "/cancel",
-            metadata={
-                "order_id": str(order.order_id),
-                "user_id": request.user.id,
-            },
-        )
         order.stripe_checkout_session = check_session.id
         order.save()
+        #save order with new session id
 
         return Response({
             "checkout_url": check_session.url
@@ -166,28 +143,8 @@ class StripeWebhookAPIView(APIView):
     permission_classes = []
 
     def post(self, request):
-        try:
-            header = request.META["HTTP_STRIPE_SIGNATURE"]
-            if not header:
-                return HttpResponse(status=400)
-            event = stripe.Webhook.construct_event(
-                request.body,
-                header,
-                settings.STRIPE_WEBHOOK_SECRET,
-            )
-        except Exception:
-            return HttpResponse(status=400)
-        session = event["data"]["object"]
-        session_id = session['id']
-
-        if event["type"] == "checkout.session.completed":
-            order = Order.objects.filter(stripe_checkout_session=session_id)
-            order.update(status="Confirmed")
-        elif event["type"] == "checkout.session.expired":
-            order = Order.objects.filter(stripe_checkout_session=session_id)
-            order.update(status="Expired")
-
-        return HttpResponse(status=200)
+        webhook_check(request=request)
+        #called func from service
 
 
 def success(request):
