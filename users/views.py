@@ -1,4 +1,7 @@
 from collections import Counter
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
@@ -15,6 +18,8 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
+
+from .service import stripe_session_check, webhook_check
 
 
 User = get_user_model()
@@ -74,7 +79,6 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
             return OrderCreateSerializer
         return OrderSerializer
 
-
     @transaction.atomic
     def perform_create(self, serializer):
         tickets = serializer.validated_data["tickets"]
@@ -111,3 +115,44 @@ class OrderUpdateApiView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     queryset = Order.objects.all()
     serializer_class = OrderSerializerForUpdate
+
+
+class StripeApiView(generics.GenericAPIView):
+    def post(self, request: Request, order_id):
+        try:
+            order = Order.objects.prefetch_related(
+            "tickets"
+        ).get(order_id=order_id, owner=request.user)
+        except Exception:
+            return Response({"msg": "Invalid order_id please send correct order_id"})
+        #get order from database by order id,
+        #and check whether owner=request.user
+
+        check_session = stripe_session_check(order=order, user_id=request.user.id)
+        #use func from .service, she has all the logic
+
+        order.stripe_checkout_session = check_session.id
+        order.save()
+        #save order with new session id
+
+        return Response({
+            "checkout_url": check_session.url
+        })
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class StripeWebhookAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        return webhook_check(request=request)
+        #called func from service
+
+
+def success(request):
+    return JsonResponse({"msg": "success"})
+
+
+def cancel(request):
+    return JsonResponse({"msg": "cancel"})
