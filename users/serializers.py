@@ -5,6 +5,7 @@ from flights.models import Ticket
 from flights.serializers import TicketCreateSerializer
 from .models import CustomUser, Order
 from rest_framework.authtoken.models import Token
+from django.db import models
 
 
 class CustomUserRegisterSerializer(serializers.ModelSerializer):
@@ -98,3 +99,18 @@ class OrderSerializerForUpdate(serializers.ModelSerializer):
         fields = ['order_id', 'tickets', 'owner', 'status',
                   'created_at',
                   'currency', 'quantity']
+
+class GeminiAskSerializer(serializers.Serializer):
+    class ModelChoice(models.TextChoices):
+        gemini_3_flash_preview = "gemini-3-flash-preview"
+        gemini_3_pro_preview = "gemini-3-pro-preview"
+        gemini_2_5_flash = "gemini-2.5-flash"
+
+    model_name = serializers.ChoiceField(
+        choices=ModelChoice.choices,
+        default=ModelChoice.gemini_3_flash_preview
+    )
+
+    prompt = serializers.CharField(
+        min_length=1
+    )

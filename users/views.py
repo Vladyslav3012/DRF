@@ -11,10 +11,11 @@ from rest_framework.exceptions import ValidationError
 
 from .models import Order
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
-                          OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate)
+                          OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate, GeminiAskSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
+from .service import create_title, ask_to_gemini
 
 
 User = get_user_model()
@@ -111,3 +112,26 @@ class OrderUpdateApiView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     queryset = Order.objects.all()
     serializer_class = OrderSerializerForUpdate
+
+
+class GeminiAPIView(generics.GenericAPIView):
+    permission_classes = []
+    serializer_class = GeminiAskSerializer
+
+    def post(self, request: Request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            model = serializer.validated_data['model_name']
+            prompt = serializer.validated_data['prompt']
+
+            answer = ask_to_gemini(model=model,
+                                   user_prompt=prompt)
+            title = create_title(model=model,
+                                 user_prompt=prompt)
+            return Response({"Title": title,
+                             "Answer": answer,
+                             "Model_use": model}, status=200)
+        return Response({"Error": serializer.errors}, status=400)
+
+
+

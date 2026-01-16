@@ -146,3 +146,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ["REFRESH_TOKEN_LIFETIME"])),
     "AUTH_HEADER_TYPES": (os.environ["AUTH_HEADER_TYPES"],),
 }
+
+GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
+SYSTEM_PROMPT = (os.environ['SYSTEM_PROMPT'])
+PROMPT_TO_TITLE = (os.environ['PROMPT_TO_TITLE'])
