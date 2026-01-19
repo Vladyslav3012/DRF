@@ -94,7 +94,9 @@ class Payment(models.Model):
     order = models.ForeignKey(Order,
                               on_delete=models.CASCADE,
                               related_name="payments")
-    stripe_checkout_session = models.CharField(max_length=255)
+    stripe_checkout_session = models.CharField(max_length=255, db_index=True)
+    checkout_url = models.URLField(blank=True, null=True, max_length=2048)
+    session_expires_at = models.DateTimeField(blank=True, null=True)
     owner = models.ForeignKey(CustomUser,
                               on_delete=models.CASCADE,
                               related_name="payments")
@@ -106,7 +108,7 @@ class Payment(models.Model):
     currency = models.CharField(max_length=20,
                                 choices=CurrencyChoice.choices,
                                 default=CurrencyChoice.USD)
-    create_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     payed_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):

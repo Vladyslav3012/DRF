@@ -134,30 +134,19 @@ class StripeApiView(generics.GenericAPIView):
 
         try:
             order = Order.objects.prefetch_related(
-            "tickets"
+                "tickets",
+                "payments"
             ).get(order_id=order_id, owner=request.user)
         except Exception:
-            logger.error(f"Order #{order_id} not found, or you are not its owner",
-                         extra={"order_id to search": order_id,
-                                "owner to search": request.user})
-
+            logger.exception(f"Order #{order_id} not found, or you are not its owner")
             raise ValidationError("Order not found, or you are not its owner")
+
         if order.status in status_order:
             logger.error(f"This order has already been paid or expired {order_id}")
             raise ValidationError("This order has already been paid or expired")
-        #get order from database by order id,
-        #and check whether owner=request.user
 
         check_session, payment = stripe_session_check(order=order, user=request.user)
         #use func from .service, she has all the logic
-        logger.info(f"Create stripe check-session #{check_session.id}",
-                    extra={"order_id": order_id,
-                    "payment": payment}
-                    )
-
-        order.stripe_checkout_session = check_session.id
-        order.save()
-        #save order with new session id
 
         return Response({
         "checkout_url": check_session.url,
@@ -170,8 +159,8 @@ class StripeWebhookAPIView(APIView):
     authentication_classes = []
     permission_classes = []
 
-    def post(self, request):
-        return webhook_check(request=request)
+    def post(self, request, token):
+        return webhook_check(request=request, token=token)
         #called func from service
 
 
