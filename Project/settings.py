@@ -28,7 +28,6 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'rest_framework.authtoken',
-    'silk',
 
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
@@ -44,7 +43,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'Project.urls'
@@ -125,7 +123,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': [
+        'drf_spectacular.openapi.AutoSchema',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
           'rest_framework.permissions.IsAuthenticated',
     ],
@@ -135,8 +135,8 @@ REST_FRAMEWORK = {
 
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Your Project API',
-    'DESCRIPTION': 'Your project description',
+    'TITLE': 'Airport API',
+    'DESCRIPTION': 'In this API you can buy ticket to fly',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
@@ -197,3 +197,8 @@ LOGGING = {
 }
 
 SECRET_TOKEN_TO_WEBHOOK = os.environ['SECRET_TOKEN_TO_WEBHOOK']
+
+if DEBUG:
+    INSTALLED_APPS += ["silk"]
+    MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
+

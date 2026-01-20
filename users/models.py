@@ -112,4 +112,4 @@ class Payment(models.Model):
     payed_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return f"Payment {self.payment_id}, by {self.owner}"
+        return f"({self.status_payment}) Payment {self.payment_id}, by {self.owner}"
