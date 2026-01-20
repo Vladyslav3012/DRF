@@ -1,10 +1,15 @@
+import logging
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
 from flights.models import Ticket
 from flights.serializers import TicketCreateSerializer
-from .models import CustomUser, Order
+from .models import CustomUser, Order, Payment
 from rest_framework.authtoken.models import Token
+
+
+logger = logging.getLogger(__name__)
 
 
 class CustomUserRegisterSerializer(serializers.ModelSerializer):
@@ -23,8 +28,10 @@ class CustomUserRegisterSerializer(serializers.ModelSerializer):
         email_exists = CustomUser.objects.filter(email=attrs['email']).exists()
         username_exists = CustomUser.objects.filter(username=attrs['username']).exists()
         if email_exists:
+            logger.error(f"Email {attrs['email']} has been user")
             raise ValidationError("This email has been used")
         if username_exists:
+            logger.error(f"Username {attrs['username']} has been user")
             raise ValidationError("This username has been used")
         return attrs
 
@@ -76,9 +83,11 @@ class OrderCreateSerializer(OrderSerializer):
             quantity=len(tickets_data),
             **validated_data
         )
+        logger.info(f"Create order #{order.order_id}")
 
         for ticket in tickets_data:
-            Ticket.objects.create(order=order, **ticket)
+            tick = Ticket.objects.create(order=order, **ticket)
+            logger.info(f"Create ticket #{tick.id}")
         return order
 
 
@@ -98,3 +107,18 @@ class OrderSerializerForUpdate(serializers.ModelSerializer):
         fields = ['order_id', 'tickets', 'owner', 'status',
                   'created_at',
                   'currency', 'quantity']
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    order = serializers.SlugRelatedField(
+        slug_field="order_id",
+        queryset=Order.objects.all()
+    )
+    owner = serializers.SlugRelatedField(slug_field="username",
+                                         queryset=CustomUser.objects.all())
+    class Meta:
+        model = Payment
+        fields = ['payment_id', 'order', 'owner', 'status_payment',
+                  'price', 'currency', 'created_at', 'payed_at', 'checkout_url',
+                  'session_expires_at'
+                  ]

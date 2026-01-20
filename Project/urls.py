@@ -11,6 +11,7 @@ from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet
 from airports import urls as AirportUrls
 from users.views import cancel, success
+from .settings import DEBUG
 
 router = DefaultRouter()
 
@@ -31,10 +32,12 @@ urlpatterns = [
     path('api/v1/', include(users.urls)),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
-urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+if DEBUG:
+    urlpatterns += [
+        path('silk/', include('silk.urls', namespace='silk')),
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ]

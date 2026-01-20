@@ -1,3 +1,4 @@
+import logging
 from collections import Counter
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -14,15 +15,17 @@ from rest_framework.exceptions import ValidationError
 
 from .models import Order
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
-                          OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate)
+                          OrderSerializer, OrderCreateSerializer,
+                          OrderSerializerForUpdate, PaymentSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
 
-from .service import stripe_session_check, webhook_check
-
+from .service import stripe_session_check, webhook_check, expire_session
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 def get_user_token(user: User):
@@ -37,10 +40,11 @@ class SignUpView(generics.GenericAPIView):
 
     def post(self, request: Request):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({"msg": "User create successful", "data": serializer.data})
-        return Response(serializer.errors)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        logger.info(f"Success sing up {serializer.validated_data.get('email')}")
+        return Response({"msg": "SingUp success",
+                         "Data": serializer.data})
 
 
 class LogInView(APIView):
@@ -54,8 +58,10 @@ class LogInView(APIView):
         user = authenticate(email=email, password=password)
         if user is not None:
             token = get_user_token(user)
+            logger.info(f"Success LogIn {user}")
             return Response({"msg": "LoginSuccessful",
                              "token": token})
+        logger.error(f"Invalid data to authenticate {email}")
         return Response(data={"msg": "Invalid email or password"})
 
     def get(self, request: Request):
@@ -85,28 +91,52 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
         flight = tickets[0]["flight"]
 
         tickets_by_class = Counter(
-            ticket["ticket_class"] for ticket in tickets
-        ) # --> {"economy": 1, "business": 1}
+            (ticket["flight"].id, ticket["ticket_class"]) for ticket in tickets
+        ) # --> {(1, 'economy'): 2, (2, 'business'): 1}
+        # {(flight_id, ticket class) : count},
 
-        flight = (
-            Flights.objects
-            .select_for_update()
-            .get(pk=flight.pk)
-        )
+        logger.info(f"Create tickets: {tickets_by_class}")
 
-        if tickets_by_class.get("economy", 0) > flight.tickets_count_economy:
-            raise ValidationError("Not enough economy seats")
+        for (flight_id, ticket_class), count in tickets_by_class.items():
+            flight = (
+                Flights.objects
+                .select_for_update()
+                .get(pk=flight_id)
+            )
 
-        if tickets_by_class.get("business", 0) > flight.tickets_count_business:
-            raise ValidationError("Not enough business seats")
+            if ticket_class == "economy":
+                if count > flight.tickets_count_economy:
+                    logger.error("Not enough economy seats")
+                    raise ValidationError("Not enough economy class seats")
+                flight.tickets_count_economy -= count
+                logger.info(f"On flight {flight_id}, buying {count}"
+                            f"from {ticket_class} class")
 
-        if tickets_by_class.get("first", 0) > flight.tickets_count_first:
-            raise ValidationError("Not enough first class seats")
+            elif ticket_class == "business":
+                if count > flight.tickets_count_business:
+                    logger.error("Not enough business seats")
+                    raise ValidationError("Not enough business class seats")
+                flight.tickets_count_business -= count
+                logger.info(f"On flight {flight_id}, buying {count}"
+                            f"from {ticket_class} class")
 
-        flight.tickets_count_economy -= tickets_by_class.get("economy", 0)
-        flight.tickets_count_business -= tickets_by_class.get("business", 0)
-        flight.tickets_count_first -= tickets_by_class.get("first", 0)
-        flight.save()
+            elif ticket_class == "first":
+                if count > flight.tickets_count_first:
+                    logger.error("Not enough first class seats")
+                    raise ValidationError("Not enough first class seats")
+                flight.tickets_count_first -= count
+                logger.info(f"On flight {flight_id}, buying {count} ticket "
+                            f"from {ticket_class} class")
+
+            else:
+                logger.error(f"Unknow ticket class {ticket_class}")
+                raise ValidationError("Unknow ticket class")
+
+            flight.save(update_fields=[
+                "tickets_count_economy",
+                "tickets_count_business",
+                "tickets_count_first",
+            ])
 
         serializer.save(owner=self.request.user)
 
@@ -119,24 +149,27 @@ class OrderUpdateApiView(generics.UpdateAPIView):
 
 class StripeApiView(generics.GenericAPIView):
     def post(self, request: Request, order_id):
+        status_order = ("Confirmed", "Expired")
+
         try:
             order = Order.objects.prefetch_related(
-            "tickets"
-        ).get(order_id=order_id, owner=request.user)
+                "tickets",
+                "payments"
+            ).get(order_id=order_id, owner=request.user)
         except Exception:
-            return Response({"msg": "Invalid order_id please send correct order_id"})
-        #get order from database by order id,
-        #and check whether owner=request.user
+            logger.exception(f"Order #{order_id} not found, or you are not its owner")
+            raise ValidationError("Order not found, or you are not its owner")
 
-        check_session = stripe_session_check(order=order, user_id=request.user.id)
+        if order.status in status_order:
+            logger.error(f"This order has already been paid or expired {order_id}")
+            raise ValidationError("This order has already been paid or expired")
+
+        check_session, payment = stripe_session_check(order=order, user=request.user)
         #use func from .service, she has all the logic
 
-        order.stripe_checkout_session = check_session.id
-        order.save()
-        #save order with new session id
-
         return Response({
-            "checkout_url": check_session.url
+        "checkout_url": check_session.url,
+        "payment": PaymentSerializer(payment).data
         })
 
 
@@ -145,10 +178,29 @@ class StripeWebhookAPIView(APIView):
     authentication_classes = []
     permission_classes = []
 
-    def post(self, request):
-        return webhook_check(request=request)
+    def post(self, request, token):
+        return webhook_check(request=request, token=token)
         #called func from service
 
+
+@method_decorator(csrf_exempt, name="dispatch")
+class WebhookExpireApiView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, order_id):
+        try:
+            order = Order.objects.get(order_id=order_id)
+        except Exception:
+            logger.error(f"Order with order_id {order_id} not found")
+            raise ValidationError("Order not found")
+
+        if order.status == "Confirmed":
+            logger.error("This order has already been paid")
+            raise ValidationError("This order has already been paid")
+
+        logger.info(f"Order #{order_id} expired")
+        return expire_session(request=request, order=order)
 
 def success(request):
     return JsonResponse({"msg": "success"})
