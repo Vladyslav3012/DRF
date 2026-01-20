@@ -91,33 +91,52 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
         flight = tickets[0]["flight"]
 
         tickets_by_class = Counter(
-            ticket["ticket_class"] for ticket in tickets
-        ) # --> {"economy": 1, "business": 1}
+            (ticket["flight"].id, ticket["ticket_class"]) for ticket in tickets
+        ) # --> {(1, 'economy'): 2, (2, 'business'): 1}
+        # {(flight_id, ticket class) : count},
+
         logger.info(f"Create tickets: {tickets_by_class}")
 
-        flight = (
-            Flights.objects
-            .select_for_update()
-            .get(pk=flight.pk)
-        )
+        for (flight_id, ticket_class), count in tickets_by_class.items():
+            flight = (
+                Flights.objects
+                .select_for_update()
+                .get(pk=flight_id)
+            )
 
-        if tickets_by_class.get("economy", 0) > flight.tickets_count_economy:
-            logger.error("Not enough economy seats")
-            raise ValidationError("Not enough economy class seats")
+            if ticket_class == "economy":
+                if count > flight.tickets_count_economy:
+                    logger.error("Not enough economy seats")
+                    raise ValidationError("Not enough economy class seats")
+                flight.tickets_count_economy -= count
+                logger.info(f"On flight {flight_id}, buying {count}"
+                            f"from {ticket_class} class")
 
+            elif ticket_class == "business":
+                if count > flight.tickets_count_business:
+                    logger.error("Not enough business seats")
+                    raise ValidationError("Not enough business class seats")
+                flight.tickets_count_business -= count
+                logger.info(f"On flight {flight_id}, buying {count}"
+                            f"from {ticket_class} class")
 
-        if tickets_by_class.get("business", 0) > flight.tickets_count_business:
-            logger.error("Not enough business seats")
-            raise ValidationError("Not enough business class seats")
+            elif ticket_class == "first":
+                if count > flight.tickets_count_first:
+                    logger.error("Not enough first class seats")
+                    raise ValidationError("Not enough first class seats")
+                flight.tickets_count_first -= count
+                logger.info(f"On flight {flight_id}, buying {count} ticket "
+                            f"from {ticket_class} class")
 
-        if tickets_by_class.get("first", 0) > flight.tickets_count_first:
-            logger.error("Not enough first class seats")
-            raise ValidationError("Not enough first class seats")
+            else:
+                logger.error(f"Unknow ticket class {ticket_class}")
+                raise ValidationError("Unknow ticket class")
 
-        flight.tickets_count_economy -= tickets_by_class.get("economy", 0)
-        flight.tickets_count_business -= tickets_by_class.get("business", 0)
-        flight.tickets_count_first -= tickets_by_class.get("first", 0)
-        flight.save()
+            flight.save(update_fields=[
+                "tickets_count_economy",
+                "tickets_count_business",
+                "tickets_count_first",
+            ])
 
         serializer.save(owner=self.request.user)
 
