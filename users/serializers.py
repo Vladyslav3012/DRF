@@ -7,7 +7,6 @@ from flights.models import Ticket
 from flights.serializers import TicketCreateSerializer
 from .models import CustomUser, Order, Payment
 from rest_framework.authtoken.models import Token
-from django.db import models
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +47,8 @@ class CustomUserRegisterSerializer(serializers.ModelSerializer):
 
 class UserLogInSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=100)
-    password = serializers.CharField(max_length=100, write_only=True)
+    password = serializers.CharField(min_length=8,
+                                     max_length=100, write_only=True)
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -123,17 +123,3 @@ class PaymentSerializer(serializers.ModelSerializer):
                   'price', 'currency', 'created_at', 'payed_at', 'checkout_url',
                   'session_expires_at'
                   ]
-class GeminiAskSerializer(serializers.Serializer):
-    class ModelChoice(models.TextChoices):
-        gemini_3_flash_preview = "gemini-3-flash-preview"
-        gemini_3_pro_preview = "gemini-3-pro-preview"
-        gemini_2_5_flash = "gemini-2.5-flash"
-
-    model_name = serializers.ChoiceField(
-        choices=ModelChoice.choices,
-        default=ModelChoice.gemini_3_flash_preview
-    )
-
-    prompt = serializers.CharField(
-        min_length=1
-    )

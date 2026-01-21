@@ -6,6 +6,8 @@ from drf_spectacular.views import (SpectacularAPIView, SpectacularSwaggerView,
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (TokenRefreshView,
                                             TokenVerifyView)
+
+import assistant.urls
 import users.urls
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet
@@ -27,9 +29,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/v1/', include(router.urls)),
-    path('api/v1/country/', include(AirportUrls)),
-
     path('api/v1/', include(users.urls)),
+    path('api/v1/country/', include(AirportUrls)),
+    path('api/v1/gemini/', include(assistant.urls)),
+
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]

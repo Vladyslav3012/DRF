@@ -28,16 +28,19 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'rest_framework.authtoken',
+    'corsheaders',
 
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
     'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
+    'assistant.apps.AssistantConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -206,3 +209,4 @@ if DEBUG:
 GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
 SYSTEM_PROMPT = (os.environ['SYSTEM_PROMPT'])
 PROMPT_TO_TITLE = (os.environ['PROMPT_TO_TITLE'])
+CORS_ALLOW_ALL_ORIGINS = True

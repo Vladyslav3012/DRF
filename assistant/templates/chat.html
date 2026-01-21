@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat Django</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Стилі для скролбару */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Стилі для markdown контенту */
+        .prose pre { background: #1f2937; color: white; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .prose code { background: #e5e7eb; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+        .prose p { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+
+    <div class="bg-white shadow p-4 flex justify-between items-center z-10">
+        <h1 class="text-xl font-bold text-blue-600 flex items-center gap-2">
+            ✨ Django Gemini Chat
+        </h1>
+        <div class="flex gap-2">
+            <input type="text" id="tokenInput" placeholder="Встав Access Token тут" class="border p-2 rounded w-64 text-sm">
+            <button onclick="initApp()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Увійти</button>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+
+        <aside class="w-1/4 bg-white border-r flex flex-col">
+            <div class="p-4 border-b">
+                <button onclick="createNewChat()" class="w-full bg-blue-100 text-blue-600 py-2 rounded font-semibold hover:bg-blue-200 transition">
+                    + Новий чат
+                </button>
+            </div>
+            <div id="chatList" class="flex-1 overflow-y-auto p-2 space-y-2">
+                <p class="text-center text-gray-500 mt-4 text-sm">Увійдіть, щоб побачити чати</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-gray-50 relative">
+
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <div class="text-center text-gray-400 mt-20">
+                    <p class="text-2xl">👋</p>
+                    <p>Виберіть чат або створіть новий</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t">
+                <div class="flex gap-2 max-w-4xl mx-auto">
+                    <input type="text" id="messageInput"
+                        class="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Напиши повідомлення..." disabled>
+                    <button id="sendBtn" onclick="sendMessage()"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        ➤
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- КОНФІГУРАЦІЯ ---
+        const API_BASE = 'http://127.0.0.1:8000/api/v1/gemini'; // Зміни порт якщо треба
+        let currentChatId = null;
+        let token = localStorage.getItem('access_token') || '';
+
+        // Ініціалізація при завантаженні
+        document.getElementById('tokenInput').value = token;
+        if(token) initApp();
+
+        // 1. Авторизація та завантаження списку
+        function initApp() {
+            token = document.getElementById('tokenInput').value;
+            localStorage.setItem('access_token', token);
+            if(!token) return alert('Введіть токен!');
+
+            loadChatList();
+        }
+
+        // 2. Завантаження списку чатів
+        async function loadChatList() {
+            try {
+                const res = await fetch(`${API_BASE}/chats/`, {
+                    headers: { 'Authorization': `JWT ${token}` }
+                });
+                if(!res.ok) throw new Error('Помилка авторизації');
+
+                const chats = await res.json();
+                const list = document.getElementById('chatList');
+                list.innerHTML = '';
+
+                chats.forEach(chat => {
+                    const btn = document.createElement('div');
+                    btn.className = `p-3 rounded cursor-pointer hover:bg-gray-100 border border-transparent transition ${currentChatId === chat.chat_id ? 'bg-blue-50 border-blue-200' : ''}`;
+                    btn.innerHTML = `
+                        <div class="font-medium truncate text-gray-800">${chat.title || 'Новий чат'}</div>
+                        <div class="text-xs text-gray-500">${new Date(chat.created_at).toLocaleDateString()}</div>
+                    `;
+                    btn.onclick = () => loadChatHistory(chat.chat_id);
+                    list.appendChild(btn);
+                });
+            } catch (e) {
+                console.error(e);
+                alert('Не вдалося завантажити чати. Перевірте токен.');
+            }
+        }
+
+        // 3. Створення нового чату
+        async function createNewChat() {
+            const defaultModel = "gemini-2.5-flash"; // Або та, що стоїть за замовчуванням
+            try {
+                const res = await fetch(`${API_BASE}/chats/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `JWT ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: "New Chat",
+                        model_name: defaultModel
+                    })
+                });
+                const chat = await res.json();
+                await loadChatList(); // Оновити список
+                loadChatHistory(chat.chat_id); // Відкрити новий чат
+            } catch (e) {
+                alert('Помилка створення чату');
+            }
+        }
+
+        // 4. Завантаження історії повідомлень
+        async function loadChatHistory(chatId) {
+            currentChatId = chatId;
+            loadChatList(); // Оновити підсвітку активного чату
+
+            // Активуємо інпут
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '<div class="text-center mt-10">Завантаження...</div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/chats/${chatId}/`, {
+                    headers: { 'Authorization': `JWT ${token}` }
+                });
+                const data = await res.json();
+
+                container.innerHTML = ''; // Очистити лоадер
+
+                // Якщо повідомлень немає
+                if (data.messages.length === 0) {
+                    container.innerHTML = '<div class="text-center text-gray-400 mt-10">Чат пустий. Напишіть щось!</div>';
+                    return;
+                }
+
+                data.messages.forEach(msg => renderMessage(msg.role, msg.content));
+                scrollToBottom();
+            } catch (e) {
+                container.innerHTML = '<div class="text-red-500 text-center">Помилка завантаження історії</div>';
+            }
+        }
+
+        // 5. Відправка повідомлення
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            // Очищуємо поле і додаємо повідомлення юзера візуально
+            input.value = '';
+            renderMessage('user', text);
+            scrollToBottom();
+
+            // Показуємо "друкує..."
+            const loadingId = renderLoading();
+            scrollToBottom();
+
+            try {
+                const res = await fetch(`${API_BASE}/chats/${currentChatId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `JWT ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: text })
+                });
+
+                // Видаляємо індикатор "друкує"
+                document.getElementById(loadingId).remove();
+
+                if (!res.ok) throw new Error('API Error');
+
+                const data = await res.json();
+
+                // Рендеримо відповідь AI
+                renderMessage('model', data.content);
+
+                // Оновлюємо список чатів (раптом змінилася назва чату)
+                if (data.chat_title) loadChatList();
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                renderMessage('model', '🔴 Помилка: Не вдалося отримати відповідь.');
+            }
+            scrollToBottom();
+        }
+
+        // --- ДОПОМІЖНІ ФУНКЦІЇ ---
+
+        function renderMessage(role, text) {
+            const container = document.getElementById('messagesContainer');
+            const isUser = role === 'user';
+
+            const div = document.createElement('div');
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+            // Markdown парсинг
+            const htmlContent = marked.parse(text);
+
+            div.innerHTML = `
+                <div class="max-w-[80%] rounded-2xl px-4 py-2 shadow-sm ${
+                    isUser
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-white text-gray-800 border rounded-bl-none prose'
+                }">
+                    ${isUser ? text : htmlContent} </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function renderLoading() {
+            const id = 'loading-' + Date.now();
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'flex justify-start';
+            div.innerHTML = `
+                <div class="bg-gray-200 text-gray-500 rounded-2xl rounded-bl-none px-4 py-2 text-sm animate-pulse">
+                    Thinking...
+                </div>
+            `;
+            container.appendChild(div);
+            return id;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Enter для відправки
+        document.getElementById('messageInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
