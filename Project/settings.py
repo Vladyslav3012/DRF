@@ -17,6 +17,7 @@ ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'users.CustomUser'
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -65,7 +66,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Project.wsgi.application'
+# WSGI_APPLICATION = 'Project.wsgi.application'
+ASGI_APPLICATION = "Project.asgi.application"
+
 
 # DATABASES = {
 #     'default': {
