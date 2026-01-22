@@ -7,11 +7,11 @@ from .serializer import (GeminiSessionSerializer, GeminiMessageSerializer,
                          GeminiMessageInput)
 
 from .models import GeminiChatSession, GeminiChatMessage
-from rest_framework.request import Request
 from rest_framework.response import Response
 from .service import ask_to_gemini, create_title
 
 
+@extend_schema(tags=['Assistant'])
 class GeminiSessionView(generics.ListCreateAPIView):
     serializer_class = GeminiSessionSerializer
 
@@ -22,6 +22,7 @@ class GeminiSessionView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
+@extend_schema(tags=['Assistant'])
 class GeminiChatDetailView(APIView):
 
     def get_session(self, chat_id, user):
@@ -29,13 +30,9 @@ class GeminiChatDetailView(APIView):
 
     def get(self, request, chat_id):
         session = self.get_session(chat_id, request.user)
-        messages = GeminiChatMessage.objects.filter(session=session).order_by('created_at')
-        serializer = GeminiSessionSerializer(messages, many=True)
+        serializer = GeminiSessionSerializer(session)
 
-        return Response({
-            "session": GeminiSessionSerializer(session).data,
-            "messages": serializer.data
-        })
+        return Response(serializer.data)
 
     @extend_schema(request=GeminiMessageInput)
     def post(self, request, chat_id):
@@ -51,7 +48,8 @@ class GeminiChatDetailView(APIView):
                 content=user_prompt
             )
 
-            history_messages = GeminiChatMessage.objects.filter(session=session).order_by('created_at')
+            history_messages = (GeminiChatMessage.objects.
+                                filter(session=session).order_by('created_at'))
 
             ai_response = ask_to_gemini(
                 model=session.model_name,

@@ -2,6 +2,7 @@ import logging
 
 from Project import settings
 from google import genai
+from google.genai import errors
 
 
 logger = logging.getLogger(__name__)
@@ -9,6 +10,10 @@ logger = logging.getLogger(__name__)
 client = genai.Client(api_key=settings.GEMINI_SECRET_KEY)
 SYSTEM_PROMPT = settings.SYSTEM_PROMPT
 PROMPT_TO_TITLE = settings.PROMPT_TO_TITLE
+
+search_tool = genai.types.Tool(
+    google_search=genai.types.GoogleSearch()
+)
 
 
 def create_title(model, user_prompt):
@@ -40,23 +45,31 @@ def ask_to_gemini(model, user_prompt, history):
             "parts": [{"text": msg.content}]
         })
 
-    all_history.append({
-        "role": "user",
-        "parts": [{"text": user_prompt}]
-    })
-
     try:
-        response = client.models.generate_content(
-            model=model,
-            contents=all_history,
-            config = genai.types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                temperature=0.7
+        chat = client.chats.create(
+            model = model,
+            history=all_history,
+            config=genai.types.GenerateContentConfig(
+                tools=[search_tool],
+                temperature=0.7,
+                system_instruction=settings.SYSTEM_PROMPT,
+                automatic_function_calling=genai.types.AutomaticFunctionCallingConfig(
+                    disable=False,
+                    maximum_remote_calls=3
+                )
             )
         )
+
+        response = chat.send_message(user_prompt)
         if response.text:
             return response.text.strip().replace('"', '')
         return "Answer not generated"
+    except errors.ClientError as e:
+        if e.code == 429:
+            logger.exception(f"Error with limit {e}")
+            return "Too Many Requests, you limit in this version wiil be over"
+        logger.exception(f"Gemini error {e}")
+        return f"Exceptions please got correct answer"
     except Exception as e:
         logger.exception(f"Gemini error {e}")
         return "An error occurred while accessing the service"

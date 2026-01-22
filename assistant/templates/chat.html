@@ -7,13 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* Стилі для скролбару */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* Стилі для markdown контенту */
         .prose pre { background: #1f2937; color: white; padding: 10px; border-radius: 5px; overflow-x: auto; }
         .prose code { background: #e5e7eb; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
         .prose p { margin-bottom: 0.5rem; }
@@ -32,7 +29,6 @@
     </div>
 
     <div class="flex flex-1 overflow-hidden">
-
         <aside class="w-1/4 bg-white border-r flex flex-col">
             <div class="p-4 border-b">
                 <button onclick="createNewChat()" class="w-full bg-blue-100 text-blue-600 py-2 rounded font-semibold hover:bg-blue-200 transition">
@@ -45,7 +41,6 @@
         </aside>
 
         <main class="flex-1 flex flex-col bg-gray-50 relative">
-
             <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
                 <div class="text-center text-gray-400 mt-20">
                     <p class="text-2xl">👋</p>
@@ -69,30 +64,27 @@
 
     <script>
         // --- КОНФІГУРАЦІЯ ---
-        const API_BASE = 'http://127.0.0.1:8000/api/v1/gemini'; // Зміни порт якщо треба
+        const API_BASE = 'http://127.0.0.1:8000/api/v1/gemini';
         let currentChatId = null;
         let token = localStorage.getItem('access_token') || '';
 
-        // Ініціалізація при завантаженні
         document.getElementById('tokenInput').value = token;
         if(token) initApp();
 
-        // 1. Авторизація та завантаження списку
         function initApp() {
             token = document.getElementById('tokenInput').value;
             localStorage.setItem('access_token', token);
             if(!token) return alert('Введіть токен!');
-
             loadChatList();
         }
 
-        // 2. Завантаження списку чатів
+        // 1. Завантаження списку чатів
         async function loadChatList() {
             try {
                 const res = await fetch(`${API_BASE}/chats/`, {
                     headers: { 'Authorization': `JWT ${token}` }
                 });
-                if(!res.ok) throw new Error('Помилка авторизації');
+                if(!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
                 const chats = await res.json();
                 const list = document.getElementById('chatList');
@@ -109,14 +101,14 @@
                     list.appendChild(btn);
                 });
             } catch (e) {
-                console.error(e);
-                alert('Не вдалося завантажити чати. Перевірте токен.');
+                console.error("Помилка завантаження списку:", e);
+                // Не показуємо алерт при кожному оновленні, тільки в консоль
             }
         }
 
-        // 3. Створення нового чату
+        // 2. Створення нового чату
         async function createNewChat() {
-            const defaultModel = "gemini-2.5-flash"; // Або та, що стоїть за замовчуванням
+            const defaultModel = "gemini-flash-latest";
             try {
                 const res = await fetch(`${API_BASE}/chats/`, {
                     method: 'POST',
@@ -129,20 +121,24 @@
                         model_name: defaultModel
                     })
                 });
+                if(!res.ok) throw new Error('Failed to create chat');
+
                 const chat = await res.json();
-                await loadChatList(); // Оновити список
-                loadChatHistory(chat.chat_id); // Відкрити новий чат
+                await loadChatList();
+                loadChatHistory(chat.chat_id);
             } catch (e) {
+                console.error(e);
                 alert('Помилка створення чату');
             }
         }
 
-        // 4. Завантаження історії повідомлень
+        // 3. Завантаження історії повідомлень (ВИПРАВЛЕНО)
         async function loadChatHistory(chatId) {
             currentChatId = chatId;
-            loadChatList(); // Оновити підсвітку активного чату
+            // Оновлюємо візуально список (підсвітка), але не робимо запит до API зайвий раз
+            const chatItems = document.getElementById('chatList').children;
+            // Тут можна додати логіку підсвітки, якщо потрібно
 
-            // Активуємо інпут
             document.getElementById('messageInput').disabled = false;
             document.getElementById('sendBtn').disabled = false;
 
@@ -153,35 +149,46 @@
                 const res = await fetch(`${API_BASE}/chats/${chatId}/`, {
                     headers: { 'Authorization': `JWT ${token}` }
                 });
+
+                if (!res.ok) throw new Error(`Помилка сервера: ${res.status}`);
+
                 const data = await res.json();
+                console.log("Отримані дані чату:", data); // ДЛЯ ДЕБАГУ
 
-                container.innerHTML = ''; // Очистити лоадер
+                container.innerHTML = '';
 
-                // Якщо повідомлень немає
+                // Перевірка, чи є messages у відповіді
+                if (!data.messages || !Array.isArray(data.messages)) {
+                    console.error("Некоректний формат відповіді:", data);
+                    container.innerHTML = '<div class="text-red-500 text-center">Помилка формату даних</div>';
+                    return;
+                }
+
                 if (data.messages.length === 0) {
                     container.innerHTML = '<div class="text-center text-gray-400 mt-10">Чат пустий. Напишіть щось!</div>';
                     return;
                 }
 
-                data.messages.forEach(msg => renderMessage(msg.role, msg.content));
+                data.messages.forEach(msg => {
+                    if (msg.content) renderMessage(msg.role, msg.content);
+                });
                 scrollToBottom();
             } catch (e) {
-                container.innerHTML = '<div class="text-red-500 text-center">Помилка завантаження історії</div>';
+                console.error("Помилка loadChatHistory:", e);
+                container.innerHTML = `<div class="text-red-500 text-center">Помилка завантаження: ${e.message}</div>`;
             }
         }
 
-        // 5. Відправка повідомлення
+        // 4. Відправка повідомлення
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
             if (!text || !currentChatId) return;
 
-            // Очищуємо поле і додаємо повідомлення юзера візуально
             input.value = '';
             renderMessage('user', text);
             scrollToBottom();
 
-            // Показуємо "друкує..."
             const loadingId = renderLoading();
             scrollToBottom();
 
@@ -195,21 +202,21 @@
                     body: JSON.stringify({ prompt: text })
                 });
 
-                // Видаляємо індикатор "друкує"
-                document.getElementById(loadingId).remove();
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove(); // Безпечне видалення
 
-                if (!res.ok) throw new Error('API Error');
+                if (!res.ok) throw new Error(`API Error: ${res.status}`);
 
                 const data = await res.json();
-
-                // Рендеримо відповідь AI
                 renderMessage('model', data.content);
 
-                // Оновлюємо список чатів (раптом змінилася назва чату)
                 if (data.chat_title) loadChatList();
 
             } catch (e) {
-                document.getElementById(loadingId).remove();
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+
+                console.error("Помилка відправки:", e);
                 renderMessage('model', '🔴 Помилка: Не вдалося отримати відповідь.');
             }
             scrollToBottom();
@@ -224,8 +231,15 @@
             const div = document.createElement('div');
             div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
 
-            // Markdown парсинг
-            const htmlContent = marked.parse(text);
+            let htmlContent = text;
+            // Безпечний виклик marked
+            try {
+                if (typeof marked !== 'undefined') {
+                    htmlContent = marked.parse(text);
+                }
+            } catch (err) {
+                console.warn("Markdown parsing error:", err);
+            }
 
             div.innerHTML = `
                 <div class="max-w-[80%] rounded-2xl px-4 py-2 shadow-sm ${
@@ -233,7 +247,8 @@
                     ? 'bg-blue-600 text-white rounded-br-none'
                     : 'bg-white text-gray-800 border rounded-bl-none prose'
                 }">
-                    ${isUser ? text : htmlContent} </div>
+                    ${isUser ? text : htmlContent}
+                </div>
             `;
             container.appendChild(div);
         }
@@ -258,7 +273,6 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Enter для відправки
         document.getElementById('messageInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendMessage();
         });

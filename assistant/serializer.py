@@ -14,7 +14,6 @@ class GeminiSessionSerializer(serializers.ModelSerializer):
     messages = GeminiChatMessageSerializer(
         many=True,
         read_only=True,
-        source="chat_message"
     )
     class Meta:
         model = GeminiChatSession

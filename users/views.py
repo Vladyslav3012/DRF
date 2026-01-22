@@ -34,6 +34,7 @@ def get_user_token(user: User):
     return tokens
 
 
+@extend_schema(tags=['Users'])
 class SignUpView(generics.GenericAPIView):
     serializer_class = CustomUserRegisterSerializer
     permission_classes = []
@@ -47,6 +48,7 @@ class SignUpView(generics.GenericAPIView):
                          "Data": serializer.data})
 
 
+@extend_schema(tags=['Users'])
 class LogInView(APIView):
     permission_classes = []
 
@@ -72,6 +74,7 @@ class LogInView(APIView):
         return Response(data=content)
 
 
+@extend_schema(tags=['Orders'])
 class OrderListCreateApiView(generics.ListCreateAPIView):
 
     def get_queryset(self):
@@ -142,12 +145,14 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
+@extend_schema(tags=['Orders'])
 class OrderUpdateApiView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     queryset = Order.objects.all()
     serializer_class = OrderSerializerForUpdate
 
 
+@extend_schema(tags=['Stripe'])
 class StripeApiView(generics.GenericAPIView):
     def post(self, request: Request, order_id):
         status_order = ("Confirmed", "Expired")
@@ -174,6 +179,7 @@ class StripeApiView(generics.GenericAPIView):
         })
 
 
+@extend_schema(tags=['Stripe'])
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookAPIView(APIView):
     authentication_classes = []
@@ -184,6 +190,7 @@ class StripeWebhookAPIView(APIView):
         #called func from service
 
 
+@extend_schema(tags=['Stripe'])
 @method_decorator(csrf_exempt, name="dispatch")
 class WebhookExpireApiView(APIView):
     authentication_classes = []

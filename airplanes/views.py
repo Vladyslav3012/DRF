@@ -1,3 +1,5 @@
+from drf_spectacular.utils import extend_schema
+
 from custom_permission import IsAdminOrReadOnly
 from .models import Airlines, Airplanes
 from .serializers import (AirlinesRetrieveSerializer,
@@ -7,6 +9,7 @@ from .serializers import (AirlinesRetrieveSerializer,
 from rest_framework import viewsets
 
 
+@extend_schema(tags=['Airplanes'])
 class AirplanesViewSet(viewsets.ModelViewSet):
     queryset = Airplanes.objects.all()
     permission_classes = [IsAdminOrReadOnly]
@@ -17,6 +20,7 @@ class AirplanesViewSet(viewsets.ModelViewSet):
         return AirplanesRetrieveSerializer
 
 
+@extend_schema(tags=['Airlines'])
 class AirlinesViewSet(viewsets.ModelViewSet):
     queryset = Airlines.objects.all()
     permission_classes = [IsAdminOrReadOnly]
