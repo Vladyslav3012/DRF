@@ -1,19 +1,17 @@
 import logging
+from datetime import datetime
 
 from Project import settings
 from google import genai
 from google.genai import errors
 
+from flights.service import get_active_flight, search_flight
 
 logger = logging.getLogger(__name__)
 
 client = genai.Client(api_key=settings.GEMINI_SECRET_KEY)
 SYSTEM_PROMPT = settings.SYSTEM_PROMPT
 PROMPT_TO_TITLE = settings.PROMPT_TO_TITLE
-
-search_tool = genai.types.Tool(
-    google_search=genai.types.GoogleSearch()
-)
 
 
 def create_title(model, user_prompt):
@@ -39,6 +37,9 @@ def create_title(model, user_prompt):
 def ask_to_gemini(model, user_prompt, history):
     all_history = []
 
+    today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    formatted_prompt = settings.SYSTEM_PROMPT.format(current_date=today)
+
     for msg in history:
         all_history.append({
             "role": msg.role,
@@ -50,9 +51,10 @@ def ask_to_gemini(model, user_prompt, history):
             model = model,
             history=all_history,
             config=genai.types.GenerateContentConfig(
-                tools=[search_tool],
+                tools=[get_active_flight,
+                       search_flight],
                 temperature=0.7,
-                system_instruction=settings.SYSTEM_PROMPT,
+                system_instruction=formatted_prompt,
                 automatic_function_calling=genai.types.AutomaticFunctionCallingConfig(
                     disable=False,
                     maximum_remote_calls=3
