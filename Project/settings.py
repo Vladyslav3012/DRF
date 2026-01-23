@@ -30,7 +30,8 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework.authtoken',
     'corsheaders',
-
+    'channels',
+    
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
     'airports.apps.AirportsConfig',

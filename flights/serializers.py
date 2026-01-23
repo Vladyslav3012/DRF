@@ -30,17 +30,27 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
     tickets_count_economy = serializers.IntegerField(min_value=0, max_value=100)
     tickets_count_business = serializers.IntegerField(min_value=0, max_value=100)
     tickets_count_first = serializers.IntegerField(min_value=0, max_value=100)
+    time_departure_formated = serializers.SerializerMethodField()
+    time_arrival_formated = serializers.SerializerMethodField()
 
     class Meta:
         model = Flights
         fields = ['id', 'flight_status_name', 'flight_status',
                   'city_departure', 'city_arrival',
-                  'time_departure', 'time_arrival',
+                  'time_departure_formated', 'time_arrival_formated',
                   'ticket_economy_price', 'ticket_business_price',
                   'ticket_first_price',
                   'tickets_count_economy', 'tickets_count_business',
                   'tickets_count_first', 'total_tickets',
                   'airplanes']
+
+    def get_time_departure_formated(self, obj):
+        return obj.time_departure.strftime("%d-%m-%Y %H:%M:%S")
+
+
+    def get_time_arrival_formated(self, obj):
+        return obj.time_arrival.strftime("%d-%m-%Y %H:%M:%S")
+
 
     def validate(self, attrs):
 

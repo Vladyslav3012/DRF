@@ -5,6 +5,7 @@ from .models import GeminiChatSession, GeminiChatMessage
 
 
 class GeminiChatMessageSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = GeminiChatMessage
         fields = ["role", "content", "created_at"]
@@ -15,6 +16,7 @@ class GeminiSessionSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+
     class Meta:
         model = GeminiChatSession
         fields = ['chat_id', 'title',
