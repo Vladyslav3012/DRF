@@ -74,7 +74,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
         return "Answer not generated"
     except errors.ClientError as e:
         if e.code == 429:
-            logger.exception(f"Error with limit {e}")
+            logger.error(f"Error with limit {e}")
             return "Too Many Requests, you limit in this version wiil be over"
         logger.exception(f"Gemini error {e}")
         return f"Exceptions please got correct answer"

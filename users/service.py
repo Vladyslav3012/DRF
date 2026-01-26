@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import List, Dict, Any
 
+from django.db import transaction, models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -136,6 +137,27 @@ def webhook_check(request, token):
         payment.status_payment = "Canceled"
         payment.save(update_fields=["status_payment"])
 
+        with transaction.atomic():
+            order = get_object_or_404(Order, order_id=order_id)
+            tickets = order.tickets.select_related('flight')
+
+            for ticket in tickets:
+                flight = ticket.flight
+                if ticket.ticket_class == 'economy':
+                    flight.tickets_count_economy = models.F('tickets_count_economy') + 1
+                    flight.save(update_fields=['tickets_count_economy'])
+                    logger.info(f"Cancel booking #{ticket.id} (economy)")
+                elif ticket.ticket_class == 'business':
+                    flight.tickets_count_business = models.F('tickets_count_business') + 1
+                    flight.save(update_fields=['tickets_count_business'])
+                    logger.info(f"Cancel booking #{ticket.id} (business)")
+                elif ticket.ticket_class == 'first':
+                    flight.tickets_count_first = models.F('tickets_count_first') + 1
+                    flight.save(update_fields=['tickets_count_first'])
+                    logger.info(f"Cancel booking #{ticket.id} (first)")
+
+            tickets.delete()
+
         logger.info(f"Payment {payment.payment_id} expired, order_updated={updated}")
         return JsonResponse({"msg": "Order payment canceled"}, status=200)
 
@@ -150,7 +172,7 @@ def expire_session(request, order):
     try:
         stripe.checkout.Session.expire(order.stripe_checkout_session)
     except stripe.error.InvalidRequestError as e:
-        logger.exception("Error")
+        logger.exception(f"Error: {e}")
         return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"msg": "Checkout session expired"}, status=200)

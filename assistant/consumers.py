@@ -1,5 +1,7 @@
 import json
 import logging
+
+import google.genai.errors
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 

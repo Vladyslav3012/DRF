@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-from django.db import transaction
+from django.db import transaction, models
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser
@@ -111,35 +111,32 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
                 if count > flight.tickets_count_economy:
                     logger.error("Not enough economy seats")
                     raise ValidationError("Not enough economy class seats")
-                flight.tickets_count_economy -= count
-                logger.info(f"On flight {flight_id}, buying {count}"
-                            f"from {ticket_class} class")
+                flight.tickets_count_economy = models.F('tickets_count_economy') - count
+                flight.save(update_fields=["tickets_count_economy"])
+                logger.info(f"On flight {flight_id}, buying {count} ticket"
+                            f" from {ticket_class} class")
 
             elif ticket_class == "business":
                 if count > flight.tickets_count_business:
                     logger.error("Not enough business seats")
                     raise ValidationError("Not enough business class seats")
-                flight.tickets_count_business -= count
-                logger.info(f"On flight {flight_id}, buying {count}"
-                            f"from {ticket_class} class")
+                flight.tickets_count_business = models.F('tickets_count_business') - count
+                flight.save(update_fields=["tickets_count_business"])
+                logger.info(f"On flight {flight_id}, buying {count} ticket"
+                            f" from {ticket_class} class")
 
             elif ticket_class == "first":
                 if count > flight.tickets_count_first:
                     logger.error("Not enough first class seats")
                     raise ValidationError("Not enough first class seats")
-                flight.tickets_count_first -= count
+                flight.tickets_count_first = models.F('tickets_count_first') - count
+                flight.save(update_fields=["tickets_count_first"])
                 logger.info(f"On flight {flight_id}, buying {count} ticket "
                             f"from {ticket_class} class")
 
             else:
                 logger.error(f"Unknow ticket class {ticket_class}")
                 raise ValidationError("Unknow ticket class")
-
-            flight.save(update_fields=[
-                "tickets_count_economy",
-                "tickets_count_business",
-                "tickets_count_first",
-            ])
 
         serializer.save(owner=self.request.user)
 
@@ -162,7 +159,7 @@ class StripeApiView(generics.GenericAPIView):
                 "payments"
             ).get(order_id=order_id, owner=request.user)
         except Exception:
-            logger.exception(f"Order #{order_id} not found, or you are not its owner")
+            logger.error(f"Order #{order_id} not found, or you are not its owner")
             raise ValidationError("Order not found, or you are not its owner")
 
         if order.status in status_order:
