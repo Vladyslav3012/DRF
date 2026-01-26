@@ -38,7 +38,6 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
                   'tickets_count_first', 'total_tickets',
                   'airplanes']
 
-
     def validate(self, attrs):
 
         economy_tickets = attrs.get('tickets_count_economy', 0)
@@ -48,7 +47,7 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
         airplanes = attrs.get('airplanes')
 
         if attrs.get('time_departure') > attrs.get('time_arrival'):
-            logger.error(f"Departure time > arrival time")
+            logger.error("Departure time > arrival time")
             raise serializers.ValidationError("Departure time cannot be "
                                               "later than arrival time.")
 

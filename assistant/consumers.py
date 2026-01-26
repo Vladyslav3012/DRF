@@ -1,7 +1,5 @@
 import json
 import logging
-
-import google.genai.errors
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -71,14 +69,12 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
             session.title = new_title
             session.save()
 
-
     @database_sync_to_async
     def get_chat(self, pk, user):
         try:
             return GeminiChatSession.objects.filter(chat_id=pk, user=user).exists()
         except Exception:
             return False
-
 
     @database_sync_to_async
     def get_gemini_response(self, user_prompt, exclude_msg=None):
@@ -93,8 +89,3 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
             user_id=self.user.id
         )
         return response
-
-
-
-
-

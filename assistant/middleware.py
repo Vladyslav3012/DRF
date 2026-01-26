@@ -13,16 +13,17 @@ algorithm = 'HS256'
 
 logger = logging.getLogger(__name__)
 
+
 @database_sync_to_async
 def get_user(token):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[algorithm])
         logger.info(f'Payload: {payload}')
     except jwt.ExpiredSignatureError:
-        logger.exception(f"Token expired")
+        logger.exception("Token expired")
         return AnonymousUser()
     except jwt.InvalidTokenError:
-        logger.exception(f"Invalid token")
+        logger.exception("Invalid token")
         return AnonymousUser()
     except Exception as e:
         logger.exception(f'Payload error: {e}')

@@ -23,12 +23,9 @@ def stripe_session_check(order, user):
 
     payment = order.payments.order_by("-created_at").first()
 
-    if (
-        payment
-        and payment.stripe_checkout_session
-        and payment.session_expires_at
-        and payment.session_expires_at > timezone.now()
-):
+    if (payment and payment.stripe_checkout_session
+            and payment.session_expires_at
+            and payment.session_expires_at > timezone.now()):
         session = stripe.checkout.Session.retrieve(payment.stripe_checkout_session)
         logger.info(f"Select exists active payment #{payment.payment_id} to this order")
         return session, payment
@@ -194,7 +191,7 @@ def get_user_order(user_id: int) -> List[Dict[str, Any]]:
         return []
     orders = (Order.objects.filter(owner=user)
               .prefetch_related('tickets')
-             .order_by("-created_at"))
+              .order_by("-created_at"))
     if not orders.exists():
         return []
 
@@ -221,7 +218,7 @@ def get_user_order(user_id: int) -> List[Dict[str, Any]]:
     return res
 
 
-def generate_payment_link(order_id:str, user_id: int) -> str:
+def generate_payment_link(order_id: str, user_id: int) -> str:
     """
         Generates a Stripe payment link for a specific order.
         Use this tool when the user confirms they want to pay for an order.

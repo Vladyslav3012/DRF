@@ -3,12 +3,10 @@ from rest_framework import generics
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 
-from .serializer import (GeminiSessionSerializer, GeminiMessageSerializer,
-                         GeminiMessageInput)
+from .serializer import GeminiSessionSerializer
 
-from .models import GeminiChatSession, GeminiChatMessage
+from .models import GeminiChatSession
 from rest_framework.response import Response
-from .service import ask_to_gemini, create_title
 
 
 @extend_schema(tags=['Assistant'])

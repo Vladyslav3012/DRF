@@ -88,14 +88,13 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
             return OrderCreateSerializer
         return OrderSerializer
 
-
     @transaction.atomic
     def perform_create(self, serializer):
         tickets = serializer.validated_data["tickets"]
 
         tickets_by_class = Counter(
             (ticket["flight"].id, ticket["ticket_class"]) for ticket in tickets
-        ) # --> {(1, 'economy'): 2, (2, 'business'): 1}
+        )  # --> {(1, 'economy'): 2, (2, 'business'): 1}
         # {(flight_id, ticket class) : count},
 
         logger.info(f"Create tickets: {tickets_by_class}")
@@ -167,11 +166,10 @@ class StripeApiView(generics.GenericAPIView):
             raise ValidationError("This order has already been paid or expired")
 
         check_session, payment = stripe_session_check(order=order, user=request.user)
-        #use func from .service, she has all the logic
 
         return Response({
-        "checkout_url": check_session.url,
-        "payment": PaymentSerializer(payment).data
+            "checkout_url": check_session.url,
+            "payment": PaymentSerializer(payment).data
         })
 
 
@@ -206,10 +204,10 @@ class WebhookExpireApiView(APIView):
         logger.info(f"Order #{order_id} expired")
         return expire_session(request=request, order=order)
 
+
 def success(request):
     return JsonResponse({"msg": "success"})
 
 
 def cancel(request):
     return JsonResponse({"msg": "cancel"})
-

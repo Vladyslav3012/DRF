@@ -117,6 +117,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     )
     owner = serializers.SlugRelatedField(slug_field="username",
                                          queryset=CustomUser.objects.all())
+
     class Meta:
         model = Payment
         fields = ['payment_id', 'order', 'owner', 'status_payment',

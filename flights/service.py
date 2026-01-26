@@ -1,6 +1,4 @@
-import json
 from typing import List, Dict, Any
-
 from .models import Flights
 
 
@@ -33,9 +31,9 @@ def get_active_flight() -> List[Dict[str, Any]]:
     return response
 
 
-def search_flight(city_departure: str | None =  None,
-                  city_arrival: str | None =  None,
-                  time_departure: str | None =  None) -> List[Dict[str, Any]]:
+def search_flight(city_departure: str | None = None,
+                  city_arrival: str | None = None,
+                  time_departure: str | None = None) -> List[Dict[str, Any]]:
     """
         Searches for flights based on departure city, arrival city, or a specific date.
 

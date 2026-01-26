@@ -1,6 +1,4 @@
 from rest_framework import serializers
-
-from users.models import CustomUser
 from .models import GeminiChatSession, GeminiChatMessage
 
 
@@ -30,6 +28,6 @@ class GeminiMessageSerializer(serializers.ModelSerializer):
         fields = ['id', 'role', 'content',
                   'created_at']
 
+
 class GeminiMessageInput(serializers.Serializer):
     prompt = serializers.CharField(min_length=1, required=True)
-

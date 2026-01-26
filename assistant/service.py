@@ -52,7 +52,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
 
     try:
         chat = client.chats.create(
-            model = model,
+            model=model,
             history=all_history,
             config=genai.types.GenerateContentConfig(
                 tools=[get_active_flight,
@@ -77,7 +77,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
             logger.error(f"Error with limit {e}")
             return "Too Many Requests, you limit in this version wiil be over"
         logger.exception(f"Gemini error {e}")
-        return f"Exceptions please got correct answer"
+        return "Exceptions please got correct answer"
     except Exception as e:
         logger.exception(f"Gemini error {e}")
         return "An error occurred while accessing the service"
