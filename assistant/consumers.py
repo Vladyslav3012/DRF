@@ -36,9 +36,10 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
                 'content': user_prompt
             }))
 
-            await self.save_message(role='user', content=user_prompt)
+            user_message = await self.save_message(role='user', content=user_prompt)
 
-            response = await self.get_gemini_response(user_prompt=user_prompt)
+            response = await self.get_gemini_response(user_prompt=user_prompt,
+                                                      exclude_msg=user_message.id)
             await self.save_message(role='model', content=response)
 
             await self.create_title(user_prompt)
@@ -78,9 +79,11 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
 
 
     @database_sync_to_async
-    def get_gemini_response(self, user_prompt):
+    def get_gemini_response(self, user_prompt, exclude_msg=None):
         session = GeminiChatSession.objects.get(chat_id=self.chat_id)
         history = GeminiChatMessage.objects.filter(session=session).order_by('created_at')
+        if exclude_msg:
+            history.exclude(id=exclude_msg)
         response = ask_to_gemini(
             model=session.model_name,
             user_prompt=user_prompt,

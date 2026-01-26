@@ -4,6 +4,9 @@ from typing import List, Dict, Any
 from .models import Flights
 
 
+base_url = 'https://else-semisolemn-meta.ngrok-free.dev/api/docs/#/Orders/v1_orders_create'
+
+
 def get_active_flight() -> List[Dict[str, Any]]:
     """
         Retrieves a list of all currently scheduled (active) flights.
@@ -23,7 +26,8 @@ def get_active_flight() -> List[Dict[str, Any]]:
                          "City arrival": flight.city_arrival,
                          "Time arrival": flight.time_arrival.strftime("%d-%m-%Y %H:%M:%S"),
                          "Average price": float(flight.average_price),
-                         "Count free ticket": flight.total_tickets
+                         "Count free ticket": flight.total_tickets,
+                         "booking_link": base_url
                          })
 
     return response
@@ -62,7 +66,8 @@ def search_flight(city_departure: str | None =  None,
                          "City arrival": flight.city_arrival,
                          "Time arrival": flight.time_arrival.strftime("%d-%m-%Y %H:%M:%S"),
                          "Average price": float(flight.average_price),
-                         "Count free ticket": flight.total_tickets
+                         "Count free ticket": flight.total_tickets,
+                         "booking_link": base_url
                          })
 
     return response
