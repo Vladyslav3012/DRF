@@ -92,7 +92,6 @@ class OrderListCreateApiView(generics.ListCreateAPIView):
     @transaction.atomic
     def perform_create(self, serializer):
         tickets = serializer.validated_data["tickets"]
-        flight = tickets[0]["flight"]
 
         tickets_by_class = Counter(
             (ticket["flight"].id, ticket["ticket_class"]) for ticket in tickets

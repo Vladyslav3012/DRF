@@ -10,8 +10,8 @@ class GeminiChatSession(models.Model):
     class ModelChoice(models.TextChoices):
         gemini_1_5_flash = "gemini-flash-latest", "Gemini 2.0 Flash Lite"
         gemini_3_flash_preview = "gemini-3-flash-preview"
-        gemini_3_pro_preview = "gemini-3-pro-preview"
-        gemini_2_5_flash = "gemini-2.5-flash"
+        gemini_2_flash = "gemini-2.0-flash-exp"
+        gemini_2_5_flash = "gemini-2.5-flash-lite"
 
     chat_id = models.UUIDField(primary_key=True,
                                default=uuid.uuid4,
@@ -23,7 +23,7 @@ class GeminiChatSession(models.Model):
                              default="New chat")
     model_name = models.CharField(max_length=50,
                                   choices=ModelChoice.choices,
-                                  default=ModelChoice.gemini_1_5_flash)
+                                  default=ModelChoice.gemini_2_flash)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

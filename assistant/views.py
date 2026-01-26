@@ -33,3 +33,8 @@ class GeminiChatDetailView(APIView):
         serializer = GeminiSessionSerializer(session)
 
         return Response(serializer.data)
+
+    def delete(self, request, chat_id):
+        chat = self.get_session(chat_id, request.user)
+        chat.delete()
+        return Response(status=204)

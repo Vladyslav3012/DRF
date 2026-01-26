@@ -1,10 +1,13 @@
 import logging
 from datetime import datetime
+from typing import List, Dict, Any
+
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from Project import settings
-from users.models import Order, Payment
+from users.models import Order, Payment, CustomUser
 import stripe
 
 logger = logging.getLogger(__name__)
@@ -151,3 +154,83 @@ def expire_session(request, order):
         return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"msg": "Checkout session expired"}, status=200)
+
+
+def get_user_order(user_id: int) -> List[Dict[str, Any]]:
+    """
+        Retrieves the complete history of flight orders/bookings for a specific user.
+        Use this tool when the user asks: "Show my tickets", "Do I have any bookings?", or "What are my orders?".
+
+        Args:
+            user_id: The unique ID of the currently authenticated user.
+
+        Returns:
+            List[Dict]: A list of orders with detailed ticket information.
+    """
+    user = CustomUser.objects.filter(id=user_id).first()
+    if not user:
+        return []
+    orders = (Order.objects.filter(owner=user)
+              .prefetch_related('tickets')
+             .order_by("-created_at"))
+    if not orders.exists():
+        return []
+
+    res = []
+
+    for order in orders:
+        ticket_data = []
+        for ticket in order.tickets.all():
+            ticket_data.append(
+                {
+                "Ticket": ticket.id,
+                "Fight": ticket.flight.id,
+                "Seat": ticket.seat_number,
+                "Class": ticket.ticket_class,
+            })
+        res.append({
+            "Order": str(order.order_id),
+            "Total price": float(order.total_price),
+            "Status": order.status,
+            "Currency": order.currency,
+            "Tickets": ticket_data
+        })
+
+    return res
+
+
+def generate_payment_link(order_id:str, user_id: int) -> str:
+    """
+        Generates a Stripe payment link for a specific order.
+        Use this tool when the user confirms they want to pay for an order.
+
+        Args:
+            order_id: The unique ID (UUID string) of the order to pay for.
+            user_id: The ID of the current user.
+
+        Returns:
+            str: The payment URL (e.g., https://checkout.stripe.com/...) or an error message.
+    """
+
+    user = get_object_or_404(CustomUser, id=user_id)
+    try:
+        order = Order.objects.prefetch_related(
+            "tickets",
+            "payments"
+        ).get(order_id=order_id, owner=user)
+    except Exception as e:
+        logger.exception(f"Order #{order_id} not found, or you are not its owner,"
+                         f" error {e}")
+        return "Order not found"
+
+    status_order = ("Confirmed", "Expired")
+    if order.status in status_order:
+        logger.error(f"This order has already been paid or expired {order_id}")
+        return "Order has been paid or expired"
+
+    try:
+        session, payment = stripe_session_check(order=order, user=user)
+    except Exception as e:
+        logger.exception(f'Error: {e}')
+        return "Something went wrong"
+    return f"[Payment order {order_id}]({session.url})"

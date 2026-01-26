@@ -14,8 +14,8 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = self.scope['url_route']['kwargs']['chat_id']
         self.user = self.scope['user']
-        is_allowerd = await self.get_chat(pk=self.chat_id, user=self.user)
-        if not is_allowerd:
+        is_allowed = await self.get_chat(pk=self.chat_id, user=self.user)
+        if not is_allowed:
             await self.close(code=404)
             return
         await self.accept()
@@ -23,7 +23,7 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, code):
         await super().disconnect(code=code)
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
         try:
             data = json.loads(text_data)
             user_prompt = data.get('prompt')
@@ -84,7 +84,8 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
         response = ask_to_gemini(
             model=session.model_name,
             user_prompt=user_prompt,
-            history=history
+            history=history,
+            user_id=self.user.id
         )
         return response
 
