@@ -7,7 +7,7 @@ from users.models import Order, Payment
 import stripe
 
 
-YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+YOUR_DOMAIN = settings.NGROK_DOMAIN
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
 
