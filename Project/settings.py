@@ -16,6 +16,8 @@ ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+NGROK_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+
 INSTALLED_APPS = [
     "daphne",
     'django.contrib.admin',
@@ -81,12 +83,12 @@ ASGI_APPLICATION = "Project.asgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ["DATABASE_ENGINE"],
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ["DATABASE_NAME"],
         'USER': os.environ["DATABASE_USER"],
         'PASSWORD': os.environ["DATABASE_PASSWORD"],
-        'HOST': os.environ["DATABASE_HOST"],
-        'POST': os.environ["DATABASE_POST"],
+        'HOST': os.environ.get("DATABASE_HOST", "db"),
+        'PORT': os.environ.get("DATABASE_PORT", '5432'),
     }
 }
 
@@ -108,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'UK'
 
-TIME_ZONE = 'Europe/Kiev'
+TIME_ZONE = 'Europe/Kyiv'
 
 USE_I18N = True
 

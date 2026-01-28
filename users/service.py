@@ -13,7 +13,7 @@ import stripe
 
 logger = logging.getLogger(__name__)
 
-YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+YOUR_DOMAIN = settings.NGROK_DOMAIN
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
