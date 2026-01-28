@@ -19,7 +19,6 @@ AUTH_USER_MODEL = 'users.CustomUser'
 NGROK_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
 
 INSTALLED_APPS = [
-    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
