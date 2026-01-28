@@ -82,8 +82,8 @@ Open a new terminal and run the command:
 ```bash
 docker-compose exec web python manage.py createsuperuser
 ```
-## 🔗 Доступні посилання
-| Сервіс | URL |
+## 🔗 Available Links
+| Service | URL |
 | :--- | :--- |
 | **Swagger UI (Docs)** | `<you-ngrok-address>/api/docs/` |
 | **Admin-Panel** | `<you-ngrok-address>/admin/` |
