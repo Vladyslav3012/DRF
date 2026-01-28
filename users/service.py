@@ -1,15 +1,20 @@
 import logging
 from datetime import datetime
+from typing import List, Dict, Any
+
+from django.db import transaction, models
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from Project import settings
-from users.models import Order, Payment
+from users.models import Order, Payment, CustomUser
 import stripe
 
+logger = logging.getLogger(__name__)
 
 YOUR_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
 stripe.api_key = settings.STRIPE_SECRET_KEY
-logger = logging.getLogger(__name__)
 
 
 def stripe_session_check(order, user):
@@ -18,16 +23,12 @@ def stripe_session_check(order, user):
 
     payment = order.payments.order_by("-created_at").first()
 
-    if (
-        payment
-        and payment.stripe_checkout_session
-        and payment.session_expires_at
-        and payment.session_expires_at > timezone.now()
-    ):
+    if (payment and payment.stripe_checkout_session
+            and payment.session_expires_at
+            and payment.session_expires_at > timezone.now()):
         session = stripe.checkout.Session.retrieve(payment.stripe_checkout_session)
         logger.info(f"Select exists active payment #{payment.payment_id} to this order")
         return session, payment
-
 
     elif not payment:
         payment = Payment.objects.create(order=order,
@@ -35,13 +36,9 @@ def stripe_session_check(order, user):
                                      price=sum([ticket.price for ticket in tickets]),
                                      currency=order.currency)
         logger.info(f"Create new payment #{payment.payment_id} to order")
-
     else:
         logger.info(f"Payment exists but session expired/missing; "
                     f"create new session for payment #{payment.payment_id}")
-
-
-
 
     for ticket in tickets:
         line_items.append({
@@ -105,7 +102,6 @@ def webhook_check(request, token):
     order_id = meta.get("order_id")
     payment_id = meta.get("payment_id")
     session_id = session["id"]
-
     if not order_id or not payment_id or not session_id:
         logger.warning(f"Webhook missing metadata: order_id={order_id},"
                        f" payment_id={payment_id}, session_id={session_id}")
@@ -138,6 +134,27 @@ def webhook_check(request, token):
         payment.status_payment = "Canceled"
         payment.save(update_fields=["status_payment"])
 
+        with transaction.atomic():
+            order = get_object_or_404(Order, order_id=order_id)
+            tickets = order.tickets.select_related('flight')
+
+            for ticket in tickets:
+                flight = ticket.flight
+                if ticket.ticket_class == 'economy':
+                    flight.tickets_count_economy = models.F('tickets_count_economy') + 1
+                    flight.save(update_fields=['tickets_count_economy'])
+                    logger.info(f"Cancel booking #{ticket.id} (economy)")
+                elif ticket.ticket_class == 'business':
+                    flight.tickets_count_business = models.F('tickets_count_business') + 1
+                    flight.save(update_fields=['tickets_count_business'])
+                    logger.info(f"Cancel booking #{ticket.id} (business)")
+                elif ticket.ticket_class == 'first':
+                    flight.tickets_count_first = models.F('tickets_count_first') + 1
+                    flight.save(update_fields=['tickets_count_first'])
+                    logger.info(f"Cancel booking #{ticket.id} (first)")
+
+            tickets.delete()
+
         logger.info(f"Payment {payment.payment_id} expired, order_updated={updated}")
         return JsonResponse({"msg": "Order payment canceled"}, status=200)
 
@@ -152,12 +169,87 @@ def expire_session(request, order):
     try:
         stripe.checkout.Session.expire(order.stripe_checkout_session)
     except stripe.error.InvalidRequestError as e:
-        logger.exception("Error")
+        logger.exception(f"Error: {e}")
         return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"msg": "Checkout session expired"}, status=200)
 
 
+def get_user_order(user_id: int) -> List[Dict[str, Any]]:
+    """
+        Retrieves the complete history of flight orders/bookings for a specific user.
+        Use this tool when the user asks: "Show my tickets", "Do I have any bookings?", or "What are my orders?".
+
+        Args:
+            user_id: The unique ID of the currently authenticated user.
+
+        Returns:
+            List[Dict]: A list of orders with detailed ticket information.
+    """
+    user = CustomUser.objects.filter(id=user_id).first()
+    if not user:
+        return []
+    orders = (Order.objects.filter(owner=user)
+              .prefetch_related('tickets')
+              .order_by("-created_at"))
+    if not orders.exists():
+        return []
+
+    res = []
+
+    for order in orders:
+        ticket_data = []
+        for ticket in order.tickets.all():
+            ticket_data.append(
+                {
+                "Ticket": ticket.id,
+                "Fight": ticket.flight.id,
+                "Seat": ticket.seat_number,
+                "Class": ticket.ticket_class,
+            })
+        res.append({
+            "Order": str(order.order_id),
+            "Total price": float(order.total_price),
+            "Status": order.status,
+            "Currency": order.currency,
+            "Tickets": ticket_data
+        })
+
+    return res
 
 
+def generate_payment_link(order_id: str, user_id: int) -> str:
+    """
+        Generates a Stripe payment link for a specific order.
+        Use this tool when the user confirms they want to pay for an order.
 
+        Args:
+            order_id: The unique ID (UUID string) of the order to pay for.
+            user_id: The ID of the current user.
+
+        Returns:
+            str: The payment URL (e.g., https://checkout.stripe.com/...) or an error message.
+    """
+
+    user = get_object_or_404(CustomUser, id=user_id)
+    try:
+        order = Order.objects.prefetch_related(
+            "tickets",
+            "payments"
+        ).get(order_id=order_id, owner=user)
+    except Exception as e:
+        logger.exception(f"Order #{order_id} not found, or you are not its owner,"
+                         f" error {e}")
+        return "Order not found"
+
+    status_order = ("Confirmed", "Expired")
+    if order.status in status_order:
+        logger.error(f"This order has already been paid or expired {order_id}")
+        return "Order has been paid or expired"
+
+    try:
+        session, payment = stripe_session_check(order=order, user=user)
+    except Exception as e:
+        logger.exception(f'Error: {e}')
+        return "Something went wrong"
+    return f"[Payment order {order_id}]({session.url})"

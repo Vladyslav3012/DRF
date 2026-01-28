@@ -47,7 +47,8 @@ class CustomUserRegisterSerializer(serializers.ModelSerializer):
 
 class UserLogInSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=100)
-    password = serializers.CharField(max_length=100, write_only=True)
+    password = serializers.CharField(min_length=8,
+                                     max_length=100, write_only=True)
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -116,6 +117,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     )
     owner = serializers.SlugRelatedField(slug_field="username",
                                          queryset=CustomUser.objects.all())
+
     class Meta:
         model = Payment
         fields = ['payment_id', 'order', 'owner', 'status_payment',

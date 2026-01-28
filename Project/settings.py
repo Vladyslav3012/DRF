@@ -17,6 +17,7 @@ ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'users.CustomUser'
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,16 +29,20 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'rest_framework.authtoken',
-
+    'corsheaders',
+    'channels',
+    
     'flights.apps.FlightsConfig',
     'users.apps.UsersConfig',
     'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
+    'assistant.apps.AssistantConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -62,7 +67,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Project.wsgi.application'
+# WSGI_APPLICATION = 'Project.wsgi.application'
+ASGI_APPLICATION = "Project.asgi.application"
+
 
 # DATABASES = {
 #     'default': {
@@ -202,3 +209,8 @@ if DEBUG:
     INSTALLED_APPS += ["silk"]
     MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
 
+
+GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
+SYSTEM_PROMPT = (os.environ['SYSTEM_PROMPT'])
+PROMPT_TO_TITLE = (os.environ['PROMPT_TO_TITLE'])
+CORS_ALLOW_ALL_ORIGINS = True

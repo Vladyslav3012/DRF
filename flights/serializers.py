@@ -14,10 +14,6 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
         slug_field="model",
         queryset=Airplanes.objects.all()
     )
-    flight_status_name = serializers.CharField(
-        source="get_flight_status_display",
-        read_only=True
-    )
     ticket_economy_price = serializers.DecimalField(min_value=0, max_value=1000,
                                                     default=0, max_digits=10,
                                                     decimal_places=2)
@@ -33,7 +29,7 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Flights
-        fields = ['id', 'flight_status_name', 'flight_status',
+        fields = ['id', 'flight_status',
                   'city_departure', 'city_arrival',
                   'time_departure', 'time_arrival',
                   'ticket_economy_price', 'ticket_business_price',
@@ -51,7 +47,7 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
         airplanes = attrs.get('airplanes')
 
         if attrs.get('time_departure') > attrs.get('time_arrival'):
-            logger.error(f"Departure time > arrival time")
+            logger.error("Departure time > arrival time")
             raise serializers.ValidationError("Departure time cannot be "
                                               "later than arrival time.")
 
@@ -97,7 +93,7 @@ class FlightListSerializer(FlightsRetrieveSerializer):
 
     class Meta:
         model = Flights
-        fields = ['id', 'flight_status_name',
+        fields = ['id', 'flight_status',
                   'city_departure', 'city_arrival',
                   'total_tickets', 'average_price']
 

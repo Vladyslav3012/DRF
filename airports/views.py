@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 
 from custom_permission import IsAdminOrReadOnly
@@ -8,18 +9,21 @@ from .serializers import (AirportListSerializer, AirportsRetrieveSerializer,
 from rest_framework import status, generics
 
 
+@extend_schema(tags=['Countries'])
 class CountryRetrieveModelAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CountryRetrieveSerializer
     queryset = Country.objects.all()
     permission_classes = [IsAdminOrReadOnly]
 
 
+@extend_schema(tags=['Countries'])
 class CountryListModelAPIView(generics.ListCreateAPIView):
     serializer_class = CountryListSerializer
     queryset = Country.objects.all()
     permission_classes = [IsAdminOrReadOnly]
 
 
+@extend_schema(tags=['Airports'])
 class AirportsListAPIView(generics.ListCreateAPIView):
     queryset = Airports.objects.all()
     permission_classes = [IsAdminOrReadOnly]
@@ -31,6 +35,7 @@ class AirportsListAPIView(generics.ListCreateAPIView):
             return AirportListSerializer
 
 
+@extend_schema(tags=['Airports'])
 class AirportsRetrieveApiView(generics.GenericAPIView):
     serializer_class = AirportsRetrieveSerializer
     permission_classes = [IsAdminOrReadOnly]
