@@ -2,13 +2,16 @@ from django.urls import path
 from Project.settings import DEBUG
 from .views import (SignUpView, LogInView, OrderListCreateApiView,
                     OrderUpdateApiView, StripeApiView,
-                    StripeWebhookAPIView, WebhookExpireApiView, ActivateUserApiView, RefreshOPTApiView)
+                    StripeWebhookAPIView, WebhookExpireApiView, ActivateUserApiView,
+                    RefreshOPTApiView,
+                    ChangePasswordApiView)
 
 urlpatterns = [
     path('signup/', SignUpView.as_view()),
     path('login/', LogInView.as_view()),
     path('activate/', ActivateUserApiView.as_view()),
     path('activate/refresh', RefreshOPTApiView.as_view()),
+    path('change-password/', ChangePasswordApiView.as_view()),
     path('orders/', OrderListCreateApiView.as_view()),
     path('orders/<str:pk>/', OrderUpdateApiView.as_view()),
     path('orders/<str:pk>/', OrderUpdateApiView.as_view()),

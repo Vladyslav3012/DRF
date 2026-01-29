@@ -23,7 +23,7 @@ from Project import settings
 from .models import Order, CustomUser
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate,
-                          PaymentSerializer, ActivateUserSerializer)
+                          PaymentSerializer, ActivateUserSerializer, ChangePasswordSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
@@ -41,7 +41,7 @@ def get_user_token(user: User):
     return tokens
 
 
-@extend_schema(tags=['Users'])
+@extend_schema(tags=['Auth'])
 class SignUpView(generics.GenericAPIView):
     serializer_class = CustomUserRegisterSerializer
     permission_classes = []
@@ -145,7 +145,7 @@ class RefreshOPTApiView(generics.GenericAPIView):
 
 
 
-@extend_schema(tags=['Users'])
+@extend_schema(tags=['Auth'])
 class LogInView(APIView):
     permission_classes = []
 
@@ -169,6 +169,26 @@ class LogInView(APIView):
             "auth": str(request.auth)
         }
         return Response(data=content)
+
+
+@extend_schema(tags=['Users'])
+class ChangePasswordApiView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    def post(self, request: Request):
+        user = request.user
+        logger.info(f"User: {user}, ask to change password")
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            logger.info(f"User: {user}, got validate error"
+                        f" {serializer.errors}")
+            return Response(serializer.errors, status=400)
+
+        new_password = serializer.validated_data.get('new_password')
+        user.set_password(new_password)
+        user.save()
+        logger.info(f"User: {user}, change password success")
+        return Response("Password change success", status=200)
+
 
 
 @extend_schema(tags=['Orders'])

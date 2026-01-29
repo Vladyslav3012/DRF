@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 import logging
 import random
@@ -65,6 +67,30 @@ class ActivateUserSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=100)
     otp = serializers.CharField(max_length=6)
 
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(min_length=8,
+                                     max_length=100, write_only=True)
+    new_password = serializers.CharField(min_length=8,
+                                     max_length=100, write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise ValidationError("Old password is incorrect")
+        return value
+
+    def validate(self, attrs):
+        old_password = attrs.get('old_password')
+        new_password = attrs.get('new_password')
+        if old_password == new_password:
+            raise ValidationError("Passwords must be different")
+        return attrs
 
 class OrderSerializer(serializers.ModelSerializer):
     order_id = serializers.UUIDField(read_only=True)
