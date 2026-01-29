@@ -124,11 +124,15 @@ def webhook_check(request, token):
         return HttpResponse(status=400)
 
     session = event["data"]["object"]
-    meta = session.get("metadata", {})
+    session_id = session["id"]
 
+    customer_detail = session.get('customer_details', {})
+    email_stripe = customer_detail.get('email')
+
+    meta = session.get("metadata", {})
     order_id = meta.get("order_id")
     payment_id = meta.get("payment_id")
-    session_id = session["id"]
+
     if not order_id or not payment_id or not session_id:
         logger.warning(f"Webhook missing metadata: order_id={order_id},"
                        f" payment_id={payment_id}, session_id={session_id}")
@@ -147,6 +151,32 @@ def webhook_check(request, token):
         payment.status_payment = "Confirmed"
         payment.payed_at = timezone.now()
         payment.save(update_fields=["status_payment", "payed_at"])
+
+        email_db = payment.owner.email
+        list_email = [email_db]
+        if email_stripe != email_db:
+            list_email.append(email_stripe)
+
+        context = {
+            'username': payment.owner,
+            'order_id': order_id,
+            'payment_id': payment.payment_id,
+            'full_price': payment.price,
+            'currency': payment.currency,
+            'payed_at': payment.payed_at
+        }
+        html_content = render_to_string('payment_order_completed.html', context)
+        text_content = strip_tags(html_content)
+        subject = f"Payment to order #{order_id} success"
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=list_email
+        )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
 
         logger.info(f"Payment {payment.payment_id} success, order_updated={updated}")
 

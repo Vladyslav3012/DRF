@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema
-from custom_permission import IsAdminOrReadOnly
-from .models import Flights
-from .serializers import FlightsRetrieveSerializer, FlightListSerializer
+from custom_permission import IsAdminOrReadOnly, IsOwnerOrAdmin
+from .models import Flights, Ticket
+from .serializers import FlightsRetrieveSerializer, FlightListSerializer, TicketListSerializer, TicketRetrieveSerializer
 from rest_framework import viewsets
 
 
@@ -14,3 +14,21 @@ class FlightsViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return FlightListSerializer
         return FlightsRetrieveSerializer
+
+@extend_schema(tags=['Tickets'])
+class TicketsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ticket.objects.all()
+    permission_classes = [IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            return Ticket.objects.none()
+        if user.is_staff:
+            return Ticket.objects.all()
+        return Ticket.objects.filter(owner=user)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return TicketListSerializer
+        return TicketRetrieveSerializer

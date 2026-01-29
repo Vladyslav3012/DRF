@@ -56,7 +56,7 @@ class SignUpView(generics.GenericAPIView):
 
 
 @extend_schema(tags=['Users'])
-class ActivateUser(generics.GenericAPIView):
+class ActivateUserApiView(generics.GenericAPIView):
     serializer_class = ActivateUserSerializer
     permission_classes = []
 
@@ -99,7 +99,7 @@ class ActivateUser(generics.GenericAPIView):
 
 
 @extend_schema(tags=['Users'])
-class RefreshOPT(generics.GenericAPIView):
+class RefreshOPTApiView(generics.GenericAPIView):
     serializer_class = UserLogInSerializer
     permission_classes = []
     def post(self, request: Request):

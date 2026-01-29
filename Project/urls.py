@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (TokenRefreshView,
 import assistant.urls
 import users.urls
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
-from flights.views import FlightsViewSet
+from flights.views import FlightsViewSet, TicketsViewSet
 from airports import urls as AirportUrls
 from users.views import cancel, success
 from .settings import DEBUG
@@ -20,6 +20,7 @@ router = DefaultRouter()
 router.register(r'airlines', AirlinesViewSet)
 router.register(r'airplanes', AirplanesViewSet)
 router.register(r'flights', FlightsViewSet)
+router.register(r'tickets', TicketsViewSet)
 
 
 urlpatterns = [

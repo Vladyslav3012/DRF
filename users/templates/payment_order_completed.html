@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment success</title>
+    <style>
+        /* Базові стилі */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* Шапка */
+        .header {
+            background-color: #27ae60;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        /* Основний контент */
+        .body-content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        /* Таблиця з деталями */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .details-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .details-table td:first-child {
+            font-weight: bold;
+            color: #7f8c8d;
+            width: 40%;
+        }
+        .details-table td:last-child {
+            text-align: right;
+            font-weight: 500;
+        }
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+        /* Ціна */
+        .total-amount {
+            text-align: center;
+            margin: 30px 0;
+            padding: 15px;
+            border: 2px dashed #27ae60;
+            border-radius: 5px;
+            color: #27ae60;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        /* Футер */
+        .footer {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+            border-top: 1px solid #eeeeee;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        /* Адаптивність */
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; border-radius: 0; }
+            .total-amount { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="icon">&#10004;</span>
+            <h1>Payment success!</h1>
+        </div>
+
+        <div class="body-content">
+            <p class="greeting">Hi, <strong>{{ username }}</strong>!</p>
+            <p style="text-align: center; color: #666;">
+               We have received your payment. Your tickets are already reserved and ready to use.
+            </p>
+
+            <div class="total-amount">
+                {{ full_price }} {{ currency }}
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <td>Order number:</td>
+                    <td>#{{ order_id }}</td>
+                </tr>
+                <tr>
+                    <td>ID transactions:</td>
+                    <td>{{ payment_id }}</td>
+                </tr>
+                <tr>
+                    <td>Date of payment:</td>
+                    <td>{{ payed_at|date:"d.m.Y H:i" }}</td>
+                </tr>
+                <tr>
+                    <td>Status:</td>
+                    <td style="color: #27ae60;">Paid confirmed</td>
+                </tr>
+            </table>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="https://else-semisolemn-meta.ngrok-free.dev/api/docs/#/Tickets/v1_tickets_list" class="btn">View tickets</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated email. Please do not respond to it.</p>
+            <p>&copy; 2026 Your Airport Service.</p>
+        </div>
+    </div>
+</body>
+</html>

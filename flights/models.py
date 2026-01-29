@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -117,7 +117,9 @@ class Ticket(models.Model):
         if ticket_class not in class_price:
             raise ValidationError("Select correct ticket class")
 
-        return class_price[ticket_class] * rates[currency_pr]
+        result = class_price[ticket_class] * rates[currency_pr]
+        price = Decimal(result).quantize(Decimal("0.00"), rounding=ROUND_HALF_UP)
+        return price
 
     def clean(self):
         if self.seat_number > self.flight.airplanes.total_seats:
