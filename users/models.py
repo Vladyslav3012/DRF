@@ -32,7 +32,13 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     email = models.CharField(max_length=80, unique=True)
-    age = models.PositiveIntegerField(blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True,
+                                      null=True)
+    otp = models.CharField(max_length=6)
+    otp_expire = models.DateTimeField(blank=True, null=True)
+    otp_try = models.PositiveSmallIntegerField(blank=True,
+                                               null=True)
+    is_active = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 

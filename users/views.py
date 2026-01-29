@@ -1,7 +1,13 @@
 import logging
+import random
 from collections import Counter
+from datetime import timedelta
+
+from django.core.mail import send_mail
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from django.db import transaction, models
@@ -13,10 +19,11 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError
 
-from .models import Order
+from Project import settings
+from .models import Order, CustomUser
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate,
-                          PaymentSerializer)
+                          PaymentSerializer, ActivateUserSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
@@ -46,6 +53,96 @@ class SignUpView(generics.GenericAPIView):
         logger.info(f"Success sing up {serializer.validated_data.get('email')}")
         return Response({"msg": "SingUp success",
                          "Data": serializer.data})
+
+
+@extend_schema(tags=['Users'])
+class ActivateUser(generics.GenericAPIView):
+    serializer_class = ActivateUserSerializer
+    permission_classes = []
+
+    def post(self, request: Request):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data.get('email')
+        otp_get = serializer.validated_data.get('otp')
+
+        user = get_object_or_404(CustomUser, email=email)
+
+        otp_in_db = user.otp
+        otp_expire = user.otp_expire
+
+        if user.otp_try <=  0:
+            return Response({"msg": "You have no more attempts."
+                                    " Please request a new code"},
+                            status=400)
+
+        if otp_expire < timezone.now():
+            return Response({"msg": f"You code expired. "
+                                    f"Please request a new code"},
+                            status=400)
+
+        if otp_get == otp_in_db:
+            user.is_active = True
+            user.otp_expire = None
+            user.otp_try = None
+            user.save(update_fields=['is_active', 'otp_expire',
+                                     'otp_try'])
+            logger.info(f"Success activated email {email}")
+            return Response({"msg": "Success, you confirmed you email"})
+
+        user.otp_try -= 1
+        user.save(update_fields=['otp_try'])
+        return Response({"msg": f"You send incorrect code, "
+                                        f"please try again, try left: {user.otp_try}"})
+
+
+@extend_schema(tags=['Users'])
+class RefreshOPT(generics.GenericAPIView):
+    serializer_class = UserLogInSerializer
+    permission_classes = []
+    def post(self, request: Request):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data.get('email')
+        password = serializer.validated_data.get('password')
+
+        logger.info(f"Email {email} ask a new code to activate")
+        user = CustomUser.objects.filter(email=email).first()
+        if user.is_active:
+            return Response({"msg": "User is already active"}, status=400)
+
+        if user and user.check_password(password):
+
+            otp = random.randint(10000, 99999)
+            otp_expire = timezone.now() + timedelta(minutes=5)
+
+            user.otp = otp
+            user.otp_expire = otp_expire
+            user.otp_try = 3
+
+            user.save(update_fields=['otp', 'otp_expire', 'otp_try'])
+
+            subject = "Your gmail has been register on our website"
+            message = (f"Hello {user.username} {subject}, nice to meet you!\n"
+                       f"You code to activate email: {otp},"
+                       f"you have 5 min to activate")
+            to_email = user.email
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                # fail_silently=True
+            )
+            return Response({"msg": "New code send to you email"})
+        return Response({"msg": "Invalid email or password"})
+
 
 
 @extend_schema(tags=['Users'])
@@ -168,7 +265,6 @@ class StripeApiView(generics.GenericAPIView):
         check_session, payment = stripe_session_check(order=order, user=request.user)
 
         return Response({
-            "checkout_url": check_session.url,
             "payment": PaymentSerializer(payment).data
         })
 

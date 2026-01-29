@@ -2,10 +2,13 @@ import logging
 from datetime import datetime
 from typing import List, Dict, Any
 
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import transaction, models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from Project import settings
 from users.models import Order, Payment, CustomUser
@@ -20,6 +23,8 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def stripe_session_check(order, user):
     line_items = []
     tickets = order.tickets.all()
+    full_price = sum([ticket.price for ticket in tickets])
+    order_id = order.order_id
 
     payment = order.payments.order_by("-created_at").first()
 
@@ -33,7 +38,7 @@ def stripe_session_check(order, user):
     elif not payment:
         payment = Payment.objects.create(order=order,
                                      owner=user,
-                                     price=sum([ticket.price for ticket in tickets]),
+                                     price=full_price,
                                      currency=order.currency)
         logger.info(f"Create new payment #{payment.payment_id} to order")
     else:
@@ -60,7 +65,7 @@ def stripe_session_check(order, user):
         success_url=YOUR_DOMAIN + "/success",
         cancel_url=YOUR_DOMAIN + "/cancel",
         metadata={
-            "order_id": str(order.order_id),
+            "order_id": str(order_id),
             "payment_id": str(payment.payment_id),
             "user_id": str(user.id),
         },
@@ -74,6 +79,28 @@ def stripe_session_check(order, user):
 
     order.stripe_checkout_session = check_session.id
     order.save(update_fields=["stripe_checkout_session"])
+    seat_list = [f"#{ticket.seat_number} ({ticket.ticket_class} class)" for ticket in tickets]
+    context = {
+        'username': user.username,
+        'order_id': order_id,
+        'payment_id': payment.payment_id,
+        'seats': seat_list,
+        'full_price': full_price,
+        'currency': order.currency,
+        'payment_url': check_session.url
+    }
+    html_content = render_to_string('payment_order.html', context)
+    text_content = strip_tags(html_content)
+    subject = f"You payment to order {order_id}"
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email]
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send(fail_silently=False)
     return check_session, payment
 
 

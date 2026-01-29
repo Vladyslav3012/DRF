@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models.signals import post_save
@@ -10,7 +12,8 @@ User = get_user_model()
 def user_post_save(sender, instance, created, **kwargs):
     if created:
         subject = "Your gmail has been register on our website"
-        message = f"Hello {instance.username} {subject}, nice to meet you!"
+        message = (f"Hello {instance.username} {subject}, nice to meet you!\n"
+                   f"You code to activate email: {instance.otp}")
         to_email = instance.email
         from_email = settings.DEFAULT_FROM_EMAIL
         send_mail(

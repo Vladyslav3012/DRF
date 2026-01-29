@@ -1,4 +1,7 @@
+from datetime import timedelta
+from django.utils import timezone
 import logging
+import random
 
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
@@ -37,11 +40,18 @@ class CustomUserRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        user = CustomUser(**validated_data)
+        otp = random.randint(10000, 99999)
+        otp_expire = timezone.now() + timedelta(minutes=5)
+        otp_try = 3
+        user = CustomUser(
+            otp=otp,
+            otp_expire=otp_expire,
+            otp_try=otp_try,
+            **validated_data
+        )
         user.set_password(password)
         user.save()
 
-        Token.objects.get_or_create(user=user)
         return user
 
 
@@ -49,6 +59,11 @@ class UserLogInSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=100)
     password = serializers.CharField(min_length=8,
                                      max_length=100, write_only=True)
+
+
+class ActivateUserSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=100)
+    otp = serializers.CharField(max_length=6)
 
 
 class OrderSerializer(serializers.ModelSerializer):
