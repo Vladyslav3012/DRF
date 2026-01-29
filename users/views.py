@@ -23,7 +23,8 @@ from Project import settings
 from .models import Order, CustomUser
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           OrderSerializer, OrderCreateSerializer, OrderSerializerForUpdate,
-                          PaymentSerializer, ActivateUserSerializer, ChangePasswordSerializer)
+                          PaymentSerializer, ActivateUserSerializer, ChangePasswordSerializer,
+                          RequestPasswordResetSerializer, SetNewPasswordWithOTPSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
 from flights.models import Flights
@@ -87,8 +88,9 @@ class ActivateUserApiView(generics.GenericAPIView):
             user.is_active = True
             user.otp_expire = None
             user.otp_try = None
+            user.otp = None
             user.save(update_fields=['is_active', 'otp_expire',
-                                     'otp_try'])
+                                     'otp_try', 'otp'])
             logger.info(f"Success activated email {email}")
             return Response({"msg": "Success, you confirmed you email"})
 
@@ -99,7 +101,7 @@ class ActivateUserApiView(generics.GenericAPIView):
 
 
 @extend_schema(tags=['Users'])
-class RefreshOPTApiView(generics.GenericAPIView):
+class RefreshOTPApiView(generics.GenericAPIView):
     serializer_class = UserLogInSerializer
     permission_classes = []
     def post(self, request: Request):
@@ -189,6 +191,88 @@ class ChangePasswordApiView(generics.GenericAPIView):
         logger.info(f"User: {user}, change password success")
         return Response("Password change success", status=200)
 
+
+@extend_schema(tags=['Users'])
+class ChangePasswordRequestOTP(generics.GenericAPIView):
+    serializer_class = RequestPasswordResetSerializer
+    permission_classes = []
+
+    def post(self, request: Request):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data.get('email')
+        try:
+            user = CustomUser.objects.filter(email=email).first()
+        except CustomUser.DoesNotExist:
+            logger.info(f"User with {email=} not found")
+            raise ValidationError("User with this email not found")
+
+        otp = random.randint(10000, 99999)
+        user.otp = otp
+        user.otp_expire = timezone.now() + timedelta(minutes=5)
+        user.otp_try = 3
+        user.save(update_fields=['otp', 'otp_expire',
+                                 'otp_try'])
+
+        message = (f"A password change request has been sent to with email. \n"
+                   f"If you are not asking about this, please ignore this email. \n"
+                   f"Your code to reset password: {otp}")
+        send_mail(
+            subject="Password Reset Request",
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=True
+        )
+        logger.info(f"Sending OTP code for reset password to {user.username=}")
+        return Response({"msg": "We have sent a secret code to your email address."})
+
+
+@extend_schema(tags=["Users"])
+class SetNewPasswordWithOTP(generics.GenericAPIView):
+    serializer_class = SetNewPasswordWithOTPSerializer
+    permission_classes = []
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        user = serializer.validated_data.get('user')
+        new_password = serializer.validated_data.get('new_password')
+        otp_get = serializer.validated_data.get('otp')
+
+        otp_in_db = user.otp
+        otp_expire = user.otp_expire
+
+        if otp_in_db is None:
+            return Response({"msg": "You don`t ask code to you email"})
+
+        if user.otp_try <=  0:
+            return Response({"msg": "You have no more attempts."
+                                    " Please request a new code"},
+                            status=400)
+
+        if otp_expire < timezone.now():
+            return Response({"msg": f"You code expired. "
+                                    f"Please request a new code"},
+                            status=400)
+
+        if otp_get == otp_in_db:
+            user.set_password(new_password)
+            user.otp_expire = None
+            user.otp_try = None
+            user.otp = None
+            user.save()
+            logger.info(f"{user.username=} change password with OTP")
+            return Response({"msg": "Success, you change your password"})
+
+        user.otp_try -= 1
+        user.save(update_fields=['otp_try'])
+        return Response({"msg": f"You send incorrect code, "
+                                        f"please try again, try left: {user.otp_try}"})
 
 
 @extend_schema(tags=['Orders'])

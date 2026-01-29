@@ -34,7 +34,8 @@ class CustomUser(AbstractUser):
     email = models.CharField(max_length=80, unique=True)
     age = models.PositiveIntegerField(blank=True,
                                       null=True)
-    otp = models.CharField(max_length=6)
+    otp = models.CharField(max_length=6, blank=True,
+                           null=True)
     otp_expire = models.DateTimeField(blank=True, null=True)
     otp_try = models.PositiveSmallIntegerField(blank=True,
                                                null=True)

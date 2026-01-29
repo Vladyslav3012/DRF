@@ -11,8 +11,6 @@ from rest_framework.validators import ValidationError
 from flights.models import Ticket
 from flights.serializers import TicketCreateSerializer
 from .models import CustomUser, Order, Payment
-from rest_framework.authtoken.models import Token
-
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +89,35 @@ class ChangePasswordSerializer(serializers.Serializer):
         if old_password == new_password:
             raise ValidationError("Passwords must be different")
         return attrs
+
+
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=100)
+
+
+class SetNewPasswordWithOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=100)
+    otp = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(min_length=8,
+                                         max_length=100, write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            logger.info(f"User with {email=} not found")
+            raise ValidationError("User with this email not found")
+
+        attrs['user'] = user
+        return attrs
+
 
 class OrderSerializer(serializers.ModelSerializer):
     order_id = serializers.UUIDField(read_only=True)
