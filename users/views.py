@@ -143,13 +143,16 @@ class RefreshOTPApiView(generics.GenericAPIView):
 
 
 @extend_schema(tags=['Auth'])
-class LogInView(APIView):
+class LogInView(generics.GenericAPIView):
     permission_classes = []
+    serializer_class = UserLogInSerializer
 
-    @extend_schema(request=UserLogInSerializer)
     def post(self, request: Request):
-        email = request.data.get('email')
-        password = request.data.get('password')
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        email = serializer.validated_data.get('email')
+        password = serializer.validated_data.get('password')
 
         user = authenticate(email=email, password=password)
         if user is not None:
