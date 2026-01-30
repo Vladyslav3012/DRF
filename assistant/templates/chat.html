@@ -125,7 +125,7 @@
         </div>
 
         <label style="margin-top:12px;">Access token</label>
-        <input id="accessToken" placeholder="можна вставити вручну" />
+        <input id="accessToken" placeholder="Enter access" />
 
         <hr style="border:0; border-top:1px solid #263045; margin:14px 0;">
 
@@ -135,7 +135,7 @@
           <button id="newChatBtn">New chat</button>
         </div>
 
-        <label style="margin-top:12px;">Model</label>
+        <label style="margin-top:12px;">Models</label>
         <select id="modelName">
           <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
           <option value="gemini-2.5-flash-lite" selected>Gemini 2.5 Flash Lite</option>
@@ -148,8 +148,8 @@
       <div class="card">
         <div class="row" style="justify-content:space-between;">
           <div>
-            <h3 style="margin-bottom:6px;">Чат</h3>
-            <div class="hint" id="activeChatHint">Активний чат: —</div>
+            <h3 style="margin-bottom:6px;">Chat</h3>
+            <div class="hint" id="activeChatHint">Active chat: —</div>
           </div>
           <div class="row" style="justify-content:flex-end;">
             <button id="disconnectWsBtn" disabled>Disconnect</button>
@@ -161,7 +161,7 @@
         <div class="chat" id="chatBox"></div>
 
         <div class="composer">
-          <textarea id="prompt" placeholder="Напиши повідомлення... (Ctrl+Enter — send)"></textarea>
+          <textarea id="prompt" placeholder="Enter you message... (Ctrl+Enter — send)"></textarea>
           <button id="sendBtn" disabled>Send</button>
         </div>
       </div>
@@ -242,7 +242,7 @@
     if (typingEl) return;
     typingEl = document.createElement("div");
     typingEl.className = "typing";
-    typingEl.innerHTML = `<div class="spinner"></div><div>Думаю...</div>`;
+    typingEl.innerHTML = `<div class="spinner"></div><div>Thinking...</div>`;
     chatBox.appendChild(typingEl);
     chatBox.scrollTop = chatBox.scrollHeight;
     el("sendBtn").disabled = true;

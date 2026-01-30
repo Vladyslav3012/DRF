@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 class Airlines(models.Model):
     title = models.CharField(max_length=100, unique=True)
     detail = models.TextField()
-    data_of_create = models.DateField(auto_now_add=True)
+    data_of_create = models.DateField()
     slogan = models.CharField(max_length=200)
     airport = models.ForeignKey("airports.airports",
                                 on_delete=models.SET_NULL,

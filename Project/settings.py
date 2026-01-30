@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
     'assistant.apps.AssistantConfig',
+    'orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [

@@ -3,7 +3,7 @@ import logging
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from airplanes.models import Airplanes
-from users.models import Payment, Order
+from orders.models import Payment, Order
 from .models import Ticket, Flights
 
 

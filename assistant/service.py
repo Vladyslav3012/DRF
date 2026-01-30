@@ -6,7 +6,8 @@ from google import genai
 from google.genai import errors
 
 from flights.service import get_active_flight, search_flight
-from users.service import get_user_order, generate_payment_link
+from orders.service import generate_payment_link
+from users.service import get_user_order
 
 logger = logging.getLogger(__name__)
 

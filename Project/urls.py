@@ -8,11 +8,12 @@ from rest_framework_simplejwt.views import (TokenRefreshView,
                                             TokenVerifyView)
 
 import assistant.urls
+import orders.urls
 import users.urls
 from airplanes.views import AirplanesViewSet, AirlinesViewSet
 from flights.views import FlightsViewSet, TicketsViewSet
 from airports import urls as AirportUrls
-from users.views import cancel, success
+from orders.views import cancel, success
 from .settings import DEBUG
 
 router = DefaultRouter()
@@ -31,6 +32,7 @@ urlpatterns = [
 
     path('api/v1/', include(router.urls)),
     path('api/v1/', include(users.urls)),
+    path('api/v1/', include(orders.urls)),
     path('api/v1/country/', include(AirportUrls)),
     path('api/v1/gemini/', include(assistant.urls)),
 

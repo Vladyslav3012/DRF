@@ -1,6 +1,4 @@
-from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.generics import get_object_or_404
