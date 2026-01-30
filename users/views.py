@@ -158,7 +158,7 @@ class LogInView(APIView):
             return Response({"msg": "LoginSuccessful",
                              "token": token})
         logger.error(f"Invalid data to authenticate {email}")
-        return Response(data={"msg": "Invalid email or password"})
+        return Response(data={"msg": "Invalid email or password"}, status=401)
 
     def get(self, request: Request):
         content = {
