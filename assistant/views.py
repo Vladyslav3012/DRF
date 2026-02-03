@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.generics import get_object_or_404
@@ -36,3 +37,8 @@ class GeminiChatDetailView(APIView):
         chat = self.get_session(chat_id, request.user)
         chat.delete()
         return Response(status=204)
+
+
+def chat_page(request, chat_id=None):
+    return render(request, "chat.html", {"chat_id": str(chat_id)})
+

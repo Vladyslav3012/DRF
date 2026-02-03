@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,7 +18,6 @@ AUTH_USER_MODEL = 'users.CustomUser'
 NGROK_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
 
 INSTALLED_APPS = [
-    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,10 +37,12 @@ INSTALLED_APPS = [
     'airports.apps.AirportsConfig',
     'airplanes.apps.AirplanesConfig',
     'assistant.apps.AssistantConfig',
+    'orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -118,6 +118,8 @@ USE_TZ = True
 
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 REST_FRAMEWORK = {
 
@@ -213,6 +215,14 @@ if DEBUG:
 
 
 GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
-SYSTEM_PROMPT = (os.environ['SYSTEM_PROMPT'])
-PROMPT_TO_TITLE = (os.environ['PROMPT_TO_TITLE'])
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']

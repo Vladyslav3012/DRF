@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -69,8 +69,8 @@ class Flights(models.Model):
             raise ValidationError("Flight must have at least one ticket")
 
     def __str__(self):
-        return (f"({self.get_flight_status_display()}) "
-                f"{self.city_departure} --> {self.city_arrival}")
+        return (f"From {self.city_departure} to {self.city_arrival}."
+                f" Status: {self.get_flight_status_display()}")
 
 
 class Ticket(models.Model):
@@ -85,7 +85,7 @@ class Ticket(models.Model):
                                     default=ClassChoice.ECONOMY)
     seat_number = models.PositiveIntegerField()
 
-    order = models.ForeignKey('users.Order', on_delete=models.CASCADE,
+    order = models.ForeignKey('orders.Order', on_delete=models.CASCADE,
                               null=True, blank=True, related_name="tickets"
                               )
     flight = models.ForeignKey(Flights,
@@ -117,7 +117,9 @@ class Ticket(models.Model):
         if ticket_class not in class_price:
             raise ValidationError("Select correct ticket class")
 
-        return class_price[ticket_class] * rates[currency_pr]
+        result = class_price[ticket_class] * rates[currency_pr]
+        price = Decimal(result).quantize(Decimal("0.00"), rounding=ROUND_HALF_UP)
+        return price
 
     def clean(self):
         if self.seat_number > self.flight.airplanes.total_seats:

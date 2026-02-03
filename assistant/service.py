@@ -1,18 +1,19 @@
 import logging
 from datetime import datetime
 
-from Project import settings
+from Project import settings, prompts
 from google import genai
 from google.genai import errors
 
 from flights.service import get_active_flight, search_flight
-from users.service import get_user_order, generate_payment_link
+from orders.service import generate_payment_link
+from users.service import get_user_order
 
 logger = logging.getLogger(__name__)
 
 client = genai.Client(api_key=settings.GEMINI_SECRET_KEY)
-SYSTEM_PROMPT = settings.SYSTEM_PROMPT
-PROMPT_TO_TITLE = settings.PROMPT_TO_TITLE
+SYSTEM_PROMPT = prompts.SYSTEM_PROMPT
+PROMPT_TO_TITLE = prompts.PROMPT_TO_TITLE
 
 
 def create_title(model, user_prompt):
@@ -41,7 +42,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
 
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     current_user_id = user_id
-    formatted_prompt = settings.SYSTEM_PROMPT.format(current_date=today,
+    formatted_prompt = prompts.SYSTEM_PROMPT.format(current_date=today,
                                                      current_user=current_user_id)
 
     for msg in history:
