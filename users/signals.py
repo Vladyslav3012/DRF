@@ -1,10 +1,7 @@
-import random
-
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from Project import settings
+from .tasks import send_email_task
 
 User = get_user_model()
 
@@ -15,11 +12,4 @@ def user_post_save(sender, instance, created, **kwargs):
         message = (f"Hello {instance.username} .{subject}, nice to meet you!\n"
                    f"You code to activate email: {instance.otp} ")
         to_email = instance.email
-        from_email = settings.DEFAULT_FROM_EMAIL
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=from_email,
-            recipient_list=[to_email],
-            # fail_silently=True
-        )
+        send_email_task.delay_on_commit(subject, message, [to_email])

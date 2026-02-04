@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from users.models import CustomUser
 from .models import Payment, Order
-
+from .tasks import send_email_order_task
 
 logger = logging.getLogger(__name__)
 
@@ -95,15 +95,8 @@ def stripe_session_check(order, user):
     html_content = render_to_string('payment_order.html', context)
     text_content = strip_tags(html_content)
     subject = f"You payment to order {order_id}"
-
-    msg = EmailMultiAlternatives(
-        subject=subject,
-        body=text_content,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email]
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    email = [user.email]
+    send_email_order_task.delay_on_commit(subject, text_content, html_content, email)
     return check_session, payment
 
 
@@ -172,14 +165,7 @@ def webhook_check(request, token):
         text_content = strip_tags(html_content)
         subject = f"Payment to order #{order_id} success"
 
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=list_email
-        )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
+        send_email_order_task.delay_on_commit(subject, text_content, html_content, list_email)
 
         logger.info(f"Payment {payment.payment_id} success, order_updated={updated}")
 

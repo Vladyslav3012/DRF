@@ -20,6 +20,7 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
 from rest_framework.response import Response
 from rest_framework.request import Request
 
+from .tasks import send_email_task
 
 User = get_user_model()
 
@@ -128,15 +129,8 @@ class RefreshOTPApiView(generics.GenericAPIView):
                        f"You code to activate email: {otp}, "
                        f"you have 5 min to activate")
             to_email = user.email
-            from_email = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=from_email,
-                recipient_list=[to_email],
-                # fail_silently=True
-            )
+            send_email_task.delay_on_commit(subject, message, [to_email])
             return Response({"msg": "New code send to you email"})
         return Response({"msg": "Invalid email or password"})
 
@@ -208,22 +202,22 @@ class ChangePasswordRequestOTP(generics.GenericAPIView):
             raise ValidationError("User with this email not found")
 
         otp = random.randint(10000, 99999)
+        if not user:
+            logger.info(f"User with {email=} not found")
+            raise ValidationError("User with this email not found")
         user.otp = otp
         user.otp_expire = timezone.now() + timedelta(minutes=5)
         user.otp_try = 3
         user.save(update_fields=['otp', 'otp_expire',
                                  'otp_try'])
 
+        subject = "Password Reset Request"
         message = (f"A password change request has been sent to with email. \n"
                    f"If you are not asking about this, please ignore this email. \n"
                    f"Your code to reset password: {otp}")
-        send_mail(
-            subject="Password Reset Request",
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=True
-        )
+        recipient_list = [email]
+        send_email_task.delay_on_commit(subject, message, recipient_list)
+
         logger.info(f"Sending OTP code for reset password to {user.username=}")
         return Response({"msg": "We have sent a secret code to your email address."})
 

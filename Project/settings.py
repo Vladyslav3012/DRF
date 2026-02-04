@@ -92,6 +92,15 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND":
+            "django.core.cache.backends.redis.RedisCache",
+        "LOCATION":
+        "redis://127.0.0.1:6379"
+    }
+}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -226,3 +235,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
