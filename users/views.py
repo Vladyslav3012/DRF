@@ -1,26 +1,23 @@
 import logging
 import random
 from datetime import timedelta
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
-from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError
 
-from Project import settings
 from .models import CustomUser
 from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           ActivateUserSerializer, ChangePasswordSerializer,
                           RequestPasswordResetSerializer, SetNewPasswordWithOTPSerializer, RefreshOTPSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 from .tasks import send_email_task
+
 
 User = get_user_model()
 
@@ -44,7 +41,7 @@ class SignUpView(generics.GenericAPIView):
         serializer.save()
         logger.info(f"Success sing up {serializer.validated_data.get('email')}")
         return Response({"msg": "SingUp success",
-                         "Data": serializer.data})
+                         "data": serializer.data}, status=201)
 
 
 @extend_schema(tags=['Users'])
@@ -158,8 +155,11 @@ class LogInView(generics.GenericAPIView):
         return Response(data={"msg": "Invalid email or password"}, status=401)
 
     def get(self, request: Request):
+        if self.request.user.is_anonymous:
+            return Response({"msg": "You are not authenticated"}, status=401)
         content = {
-            "user": str(request.user),
+            "username": str(request.user),
+            "email": str(request.user.email),
             "auth": str(request.auth)
         }
         return Response(data=content)

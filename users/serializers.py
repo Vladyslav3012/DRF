@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 class CustomUserRegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=100)
     username = serializers.CharField(max_length=50)
-    age = serializers.IntegerField(min_value=1, max_value=120)
+    age = serializers.IntegerField(min_value=1, max_value=120,
+                                   required=False)
     password = serializers.CharField(min_length=8,
                                      write_only=True,
                                      max_length=50)
