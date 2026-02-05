@@ -90,7 +90,8 @@ class ActivateUserApiView(generics.GenericAPIView):
         user.otp_try -= 1
         user.save(update_fields=['otp_try'])
         return Response({"msg": f"You send incorrect code, "
-                                        f"please try again, try left: {user.otp_try}"})
+                                        f"please try again, try left: {user.otp_try}"},
+                        status=400)
 
 
 @extend_schema(tags=['Users'])
@@ -129,7 +130,7 @@ class RefreshOTPApiView(generics.GenericAPIView):
 
             send_email_task.delay_on_commit(subject, message, [to_email])
             return Response({"msg": "New code send to you email"})
-        return Response({"msg": "Invalid email or password"})
+        return Response({"msg": "Invalid email or password"}, status=400)
 
 
 

@@ -1,10 +1,10 @@
 import pytest
-
+from django.urls import reverse
 from users.models import CustomUser
 from users.tests.factories import UserFactory
 
-url_to_sign = "/api/v1/signup/"
-url_to_login = "/api/v1/login/"
+url_to_sign = reverse('signup')
+url_to_login = reverse('login')
 
 """
 TESTING USER SIGNUP
