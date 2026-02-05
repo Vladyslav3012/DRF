@@ -15,7 +15,8 @@ URL_AIRLINES = reverse('airlines-list')
         ("anonymous", 401),
         ("admin", 201),
         ("regular", 403),
-],)
+    ]
+)
 def test_create_airlines_permission(api_client, user_type, status):
     if user_type == "admin":
         admin = UserFactory(is_staff=True)
@@ -80,7 +81,6 @@ def test_create_airlines_invalid_airport(api_client):
     }
     response = api_client.post(URL_AIRLINES, data=payload)
     assert response.status_code == 400
-
 
 
 @pytest.mark.django_db

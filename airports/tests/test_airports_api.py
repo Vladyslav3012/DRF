@@ -10,6 +10,8 @@ URL_AIRPORTS = reverse('airport-list')
 """
 TESTING AIRPORT CREATION PERMISSIONS
 """
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "user_type, status",
@@ -47,6 +49,8 @@ def test_create_airport_permission(api_client, user_type, status):
 """
 TESTING AIRPORT CREATION WITH INVALID COUNTRY
 """
+
+
 @pytest.mark.django_db
 def test_create_airport_invalid_country(api_client):
     admin = UserFactory(is_staff=True)
@@ -66,6 +70,8 @@ def test_create_airport_invalid_country(api_client):
 """
 TESTING EXISTING AIRPORT CREATING
 """
+
+
 @pytest.mark.django_db
 def test_create_existing_airport(api_client):
     admin = UserFactory(is_staff=True)

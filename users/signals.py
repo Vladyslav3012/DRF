@@ -5,6 +5,7 @@ from .tasks import send_email_task
 
 User = get_user_model()
 
+
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance, created, **kwargs):
     if created:

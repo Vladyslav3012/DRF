@@ -75,4 +75,3 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"({self.status_payment}) Payment {self.payment_id}, by {self.owner}"
-

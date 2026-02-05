@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction, models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -38,10 +37,9 @@ def stripe_session_check(order, user):
         return session, payment
 
     elif not payment:
-        payment = Payment.objects.create(order=order,
-                                     owner=user,
-                                     price=full_price,
-                                     currency=order.currency)
+        payment = Payment.objects.create(order=order, owner=user,
+                                         price=full_price,
+                                         currency=order.currency)
         logger.info(f"Create new payment #{payment.payment_id} to order")
     else:
         logger.info(f"Payment exists but session expired/missing; "
@@ -143,7 +141,8 @@ def webhook_check(request, token):
     event_type = event.get("type")
     if event_type == "checkout.session.completed":
         updated = Order.objects.filter(order_id=order_id,
-                             stripe_checkout_session=session_id).update(status="Confirmed")
+                                       stripe_checkout_session=session_id
+                                       ).update(status="Confirmed")
         payment.status_payment = "Confirmed"
         payment.payed_at = timezone.now()
         payment.save(update_fields=["status_payment", "payed_at"])

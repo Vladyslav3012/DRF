@@ -67,14 +67,14 @@ class ActivateUserApiView(generics.GenericAPIView):
         otp_in_db = user.otp
         otp_expire = user.otp_expire
 
-        if user.otp_try <=  0:
+        if user.otp_try <= 0:
             return Response({"msg": "You have no more attempts."
                                     " Please request a new code"},
                             status=400)
 
         if otp_expire < timezone.now():
-            return Response({"msg": f"You code expired. "
-                                    f"Please request a new code"},
+            return Response({"msg": "You code expired. "
+                                    "Please request a new code"},
                             status=400)
 
         if otp_get == otp_in_db:
@@ -89,8 +89,8 @@ class ActivateUserApiView(generics.GenericAPIView):
 
         user.otp_try -= 1
         user.save(update_fields=['otp_try'])
-        return Response({"msg": f"You send incorrect code, "
-                                        f"please try again, try left: {user.otp_try}"},
+        return Response({"msg": f"You send incorrect code "
+                                f"please try again, try left: {user.otp_try}"},
                         status=400)
 
 
@@ -98,6 +98,7 @@ class ActivateUserApiView(generics.GenericAPIView):
 class RefreshOTPApiView(generics.GenericAPIView):
     serializer_class = RefreshOTPSerializer
     permission_classes = []
+
     def post(self, request: Request):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -131,7 +132,6 @@ class RefreshOTPApiView(generics.GenericAPIView):
             send_email_task.delay_on_commit(subject, message, [to_email])
             return Response({"msg": "New code send to you email"})
         return Response({"msg": "Invalid email or password"}, status=400)
-
 
 
 @extend_schema(tags=['Auth'])
@@ -169,6 +169,7 @@ class LogInView(generics.GenericAPIView):
 @extend_schema(tags=['Users'])
 class ChangePasswordApiView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
+
     def post(self, request: Request):
         user = request.user
         logger.info(f"User: {user}, ask to change password")
@@ -243,14 +244,14 @@ class SetNewPasswordWithOTP(generics.GenericAPIView):
         if otp_in_db is None:
             return Response({"msg": "You don`t ask code to you email"})
 
-        if user.otp_try <=  0:
+        if user.otp_try <= 0:
             return Response({"msg": "You have no more attempts."
                                     " Please request a new code"},
                             status=400)
 
         if otp_expire < timezone.now():
-            return Response({"msg": f"You code expired. "
-                                    f"Please request a new code"},
+            return Response({"msg": "You code expired. "
+                                    "Please request a new code"},
                             status=400)
 
         if otp_get == otp_in_db:
@@ -265,5 +266,4 @@ class SetNewPasswordWithOTP(generics.GenericAPIView):
         user.otp_try -= 1
         user.save(update_fields=['otp_try'])
         return Response({"msg": f"You send incorrect code, "
-                                        f"please try again, try left: {user.otp_try}"})
-
+                                f"please try again, try left: {user.otp_try}"})

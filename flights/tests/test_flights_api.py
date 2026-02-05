@@ -223,9 +223,3 @@ def test_delete_flight(api_client):
     assert response.status_code == 204
     get_response = api_client.get(f"{URL_FLIGHT}{flight.id}/")
     assert get_response.status_code == 404
-
-
-
-
-
-

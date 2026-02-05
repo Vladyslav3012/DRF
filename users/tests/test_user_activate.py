@@ -19,7 +19,7 @@ def test_user_activation(api_client):
     response = api_client.post(url_activate, data=payload)
     assert response.status_code == 200
     user.refresh_from_db()
-    assert user.is_active == True
+    assert user.is_active is True
     assert user.otp is None
     assert user.otp_try is None
     assert user.otp_expire is None
@@ -36,7 +36,7 @@ def test_user_activation_invalid_otp(api_client):
     response = api_client.post(url_activate, data=payload)
     assert response.status_code == 400
     user.refresh_from_db()
-    assert user.is_active == False
+    assert user.is_active is False
     assert user.otp_try == 2
     assert user.otp_expire is not None
 
@@ -52,7 +52,7 @@ def test_user_activation_already_active(api_client):
     response = api_client.post(url_activate, data=payload)
     assert response.status_code == 400
     user.refresh_from_db()
-    assert user.is_active == True
+    assert user.is_active is True
 
 
 @pytest.mark.django_db

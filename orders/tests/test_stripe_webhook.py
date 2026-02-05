@@ -1,7 +1,7 @@
 import os
 import pytest
 from django.urls import reverse
-from orders.models import  Payment
+from orders.models import Payment
 from orders.tests.factories import OrderFactory
 
 
@@ -32,11 +32,11 @@ def test_webhook_check_valid_session(api_client, mocker):
                 "customer_details": {
                     "email": "test@example.com"
                 },
-            "metadata": {
-                "order_id": str(order.order_id),
-                "payment_id": str(payment.payment_id)
+                "metadata": {
+                    "order_id": str(order.order_id),
+                    "payment_id": str(payment.payment_id)
+                }
             }
-        }
         }
     }
 
@@ -54,6 +54,3 @@ def test_webhook_check_valid_session(api_client, mocker):
     assert order.status == "Confirmed"
     assert payment.status_payment == "Confirmed"
     assert payment.payed_at is not None
-
-
-

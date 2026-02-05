@@ -10,6 +10,8 @@ URL_COUNTRY = reverse('country-list')
 """
 TESTING COUNTRY CREATION PERMISSIONS
 """
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "user_type, status",
@@ -76,15 +78,15 @@ def test_update_country(api_client):
     admin = UserFactory(is_staff=True)
     api_client.force_authenticate(user=admin)
 
-    country=CountryFactory()
-    payload={
-        "title":"UpdatedCountry",
-        "capital":"UpdatedCapital"
+    country = CountryFactory()
+    payload = {
+        "title": "UpdatedCountry",
+        "capital": "UpdatedCapital"
     }
-    response=api_client.put(f"{URL_COUNTRY}{country.id}/",data=payload)
-    assert response.status_code==200
-    assert response.data["title"]=="UpdatedCountry"
-    assert response.data["capital"]=="UpdatedCapital"
+    response = api_client.put(f"{URL_COUNTRY}{country.id}/", data=payload)
+    assert response.status_code == 200
+    assert response.data["title"] == "UpdatedCountry"
+    assert response.data["capital"] == "UpdatedCapital"
 
 
 @pytest.mark.django_db

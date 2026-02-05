@@ -17,6 +17,7 @@ class FlightsViewSet(viewsets.ModelViewSet):
             return FlightListSerializer
         return FlightsRetrieveSerializer
 
+
 @extend_schema(tags=['Tickets'])
 class TicketsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ticket.objects.all()

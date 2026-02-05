@@ -13,4 +13,4 @@ def send_email_order_task(subject, text_content, html_content, email):
         )
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
-    return f'Successfully sent email'
+    return 'Successfully sent email'

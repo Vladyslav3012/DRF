@@ -9,6 +9,8 @@ url_to_login = reverse('login')
 """
 TESTING USER SIGNUP
 """
+
+
 @pytest.mark.django_db
 def test_signup_user(api_client):
     user_data = UserFactory.build()
@@ -27,8 +29,9 @@ def test_signup_user(api_client):
 
     assert CustomUser.objects.filter(email=user_data.email).exists()
     new_user = CustomUser.objects.get(email=user_data.email)
-    assert new_user.is_active == False
+    assert new_user.is_active is False
     assert new_user.check_password("testpassword123")
+
 
 @pytest.mark.django_db
 def test_signup_user_existing_email(api_client):
@@ -46,6 +49,8 @@ def test_signup_user_existing_email(api_client):
 """
 TESTING USER AUTHENTICATION
 """
+
+
 @pytest.mark.django_db
 def test_user_authentication(api_client):
     password = "testpassword123"
@@ -77,6 +82,8 @@ def test_user_authentication_invalid_credentials(api_client):
 """
 TESTING GET AUTHENTICATED USER DETAILS
 """
+
+
 @pytest.mark.django_db
 def test_get_auth_user(user, auth_user):
     response = auth_user.get(url_to_login)
@@ -84,6 +91,7 @@ def test_get_auth_user(user, auth_user):
     assert response.data['username'] == user.username
     assert response.data['email'] == user.email
     assert 'password' not in response.data
+
 
 @pytest.mark.django_db
 def test_get_unauth_user(api_client):
@@ -96,6 +104,8 @@ def test_get_unauth_user(api_client):
 """
 TESTING EMAIL VERIFICATION SIGNAL
 """
+
+
 @pytest.mark.django_db
 def test_email_verification_signal(mocker, api_client):
     user = UserFactory.build()

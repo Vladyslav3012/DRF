@@ -103,4 +103,3 @@ def test_update_order_permission(api_client, user_type, status):
     if status == 200:
         assert response.data['status'] == "Confirmed"
         assert response.data['order_id'] == str(order_id)
-

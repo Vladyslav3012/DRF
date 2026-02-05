@@ -3,7 +3,6 @@ import logging
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from airplanes.models import Airplanes
-from orders.models import Payment, Order
 from .models import Ticket, Flights
 
 
@@ -28,7 +27,7 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
     tickets_count_business = serializers.IntegerField(min_value=0, max_value=100)
     tickets_count_first = serializers.IntegerField(min_value=0, max_value=100)
     average_price = serializers.DecimalField(max_digits=10, decimal_places=2,
-                                              read_only=True)
+                                             read_only=True)
     total_tickets = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -157,6 +156,7 @@ class TicketCreateSerializer(serializers.ModelSerializer):
                     logger.error(f"There is no such place on first #{seat_number}")
                     raise serializers.ValidationError("Seat number exceeds "
                                                       "first class seats on airplane")
+
 
 class TicketListSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='order.status', read_only=True)
