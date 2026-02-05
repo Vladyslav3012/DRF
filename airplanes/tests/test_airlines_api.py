@@ -125,3 +125,16 @@ def test_update_airlines(api_client):
     assert response.data["data_of_create"] == "2023-01-01"
     assert response.data["slogan"] == "UpdatedSlogan"
     assert response.data["airport"] == new_airport.title
+
+
+@pytest.mark.django_db
+def test_delete_airlines(api_client):
+    admin = UserFactory(is_staff=True)
+    api_client.force_authenticate(user=admin)
+
+    airline = AirlinesFactory()
+    response = api_client.delete(f"{URL_AIRLINES}{airline.id}/")
+    assert response.status_code == 204
+
+    get_response = api_client.get(f"{URL_AIRLINES}{airline.id}/")
+    assert get_response.status_code == 404
