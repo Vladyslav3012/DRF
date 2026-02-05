@@ -88,9 +88,7 @@ def test_crate_flight_permission(api_client, user_type, status):
 
 
 @pytest.mark.django_db
-def test_create_flight_invalid_airplane(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_create_flight_invalid_airplane(auth_admin):
 
     flight_data = FlightsFactory.build()
     payload = {
@@ -108,7 +106,7 @@ def test_create_flight_invalid_airplane(api_client):
         "airplanes": "NonExistentAirplane"
     }
 
-    response = api_client.post(URL_FLIGHT, data=payload)
+    response = auth_admin.post(URL_FLIGHT, data=payload)
     assert response.status_code == 400
 
 
@@ -147,9 +145,7 @@ def test_get_flight_retrieve(api_client):
 
 
 @pytest.mark.django_db
-def test_update_patch_flight(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_update_patch_flight(auth_admin):
 
     flight = FlightsFactory()
     new_city_departure = "New City Departure"
@@ -157,7 +153,7 @@ def test_update_patch_flight(api_client):
         "city_departure": new_city_departure
     }
 
-    response = api_client.patch(f"{URL_FLIGHT}{flight.id}/", data=payload)
+    response = auth_admin.patch(f"{URL_FLIGHT}{flight.id}/", data=payload)
     assert response.status_code == 200
     assert response.data["city_departure"] == new_city_departure
     assert response.data["city_arrival"] == flight.city_arrival
@@ -172,9 +168,7 @@ def test_update_patch_flight(api_client):
 
 
 @pytest.mark.django_db
-def test_update_put_flight(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_update_put_flight(auth_admin):
 
     flight = FlightsFactory()
     new_city_departure = "Updated City Departure"
@@ -194,7 +188,7 @@ def test_update_put_flight(api_client):
         "airplanes": flight.airplanes.model
     }
 
-    response = api_client.put(f"{URL_FLIGHT}{flight.id}/", data=payload)
+    response = auth_admin.put(f"{URL_FLIGHT}{flight.id}/", data=payload)
 
     assert response.status_code == 200
     assert response.data["city_departure"] == new_city_departure
@@ -214,12 +208,10 @@ def test_update_put_flight(api_client):
 
 
 @pytest.mark.django_db
-def test_delete_flight(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_delete_flight(auth_admin):
 
     flight = FlightsFactory()
-    response = api_client.delete(f"{URL_FLIGHT}{flight.id}/")
+    response = auth_admin.delete(f"{URL_FLIGHT}{flight.id}/")
     assert response.status_code == 204
-    get_response = api_client.get(f"{URL_FLIGHT}{flight.id}/")
+    get_response = auth_admin.get(f"{URL_FLIGHT}{flight.id}/")
     assert get_response.status_code == 404

@@ -28,9 +28,7 @@ def test_order_total_price(api_client):
 
 
 @pytest.mark.django_db
-def test_order_creation(api_client):
-    user = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=user)
+def test_order_creation(auth_admin):
 
     flight = FlightsFactory(
         ticket_economy_price=100.00,
@@ -45,7 +43,7 @@ def test_order_creation(api_client):
         ]
     }
 
-    response = api_client.post(URL_ORDERS, data=payload, format='json')
+    response = auth_admin.post(URL_ORDERS, data=payload, format='json')
     assert response.status_code == 201
     ticket_data = response.data['tickets']
     assert len(ticket_data) == 2

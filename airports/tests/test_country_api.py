@@ -41,9 +41,7 @@ def test_create_country_permission(api_client, user_type, status):
 
 
 @pytest.mark.django_db
-def test_create_country_existing_title(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_create_country_existing_title(auth_admin):
 
     existing_country = CountryFactory()
     country_data = CountryFactory.build(title=existing_country.title)
@@ -51,7 +49,7 @@ def test_create_country_existing_title(api_client):
         "title": country_data.title,
         "capital": country_data.capital,
     }
-    response = api_client.post(URL_COUNTRY, data=payload)
+    response = auth_admin.post(URL_COUNTRY, data=payload)
     assert response.status_code == 400
 
 
@@ -74,28 +72,24 @@ def test_get_country_retrieve(api_client):
 
 
 @pytest.mark.django_db
-def test_update_country(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_update_country(auth_admin):
 
     country = CountryFactory()
     payload = {
         "title": "UpdatedCountry",
         "capital": "UpdatedCapital"
     }
-    response = api_client.put(f"{URL_COUNTRY}{country.id}/", data=payload)
+    response = auth_admin.put(f"{URL_COUNTRY}{country.id}/", data=payload)
     assert response.status_code == 200
     assert response.data["title"] == "UpdatedCountry"
     assert response.data["capital"] == "UpdatedCapital"
 
 
 @pytest.mark.django_db
-def test_delete_country(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_delete_country(auth_admin):
 
     country = CountryFactory()
-    response = api_client.delete(f"{URL_COUNTRY}{country.id}/")
+    response = auth_admin.delete(f"{URL_COUNTRY}{country.id}/")
     assert response.status_code == 204
-    get_response = api_client.get(f"{URL_COUNTRY}{country.id}/")
+    get_response = auth_admin.get(f"{URL_COUNTRY}{country.id}/")
     assert get_response.status_code == 404

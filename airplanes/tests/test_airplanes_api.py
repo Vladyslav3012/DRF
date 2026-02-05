@@ -77,9 +77,7 @@ def test_get_airplanes_retrieve(api_client):
 
 
 @pytest.mark.django_db
-def test_update_airplanes(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_update_airplanes(auth_admin):
 
     airplane = AirplanesFactory()
     new_airline = AirlinesFactory()
@@ -96,7 +94,7 @@ def test_update_airplanes(api_client):
         "airlines": new_airline.title,
     }
 
-    response = api_client.put(f"{URL_AIRPLANES}{airplane.id}/", data=payload)
+    response = auth_admin.put(f"{URL_AIRPLANES}{airplane.id}/", data=payload)
 
     assert response.status_code == 200
     assert response.data["model"] == "Updated Model"
@@ -110,13 +108,11 @@ def test_update_airplanes(api_client):
 
 
 @pytest.mark.django_db
-def test_delete_airplanes(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_delete_airplanes(auth_admin):
 
     airplane = AirplanesFactory()
-    response = api_client.delete(f"{URL_AIRPLANES}{airplane.id}/")
+    response = auth_admin.delete(f"{URL_AIRPLANES}{airplane.id}/")
     assert response.status_code == 204
 
-    response = api_client.get(f"{URL_AIRPLANES}{airplane.id}/")
+    response = auth_admin.get(f"{URL_AIRPLANES}{airplane.id}/")
     assert response.status_code == 404

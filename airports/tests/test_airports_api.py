@@ -52,9 +52,7 @@ TESTING AIRPORT CREATION WITH INVALID COUNTRY
 
 
 @pytest.mark.django_db
-def test_create_airport_invalid_country(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_create_airport_invalid_country(auth_admin):
 
     airport_data = AirportsFactory.build()
     payload = {
@@ -63,7 +61,7 @@ def test_create_airport_invalid_country(api_client):
         "contact": airport_data.contact,
         "country": "NonExistentCountry",
     }
-    response = api_client.post(URL_AIRPORTS, data=payload)
+    response = auth_admin.post(URL_AIRPORTS, data=payload)
     assert response.status_code == 400
 
 
@@ -73,9 +71,7 @@ TESTING EXISTING AIRPORT CREATING
 
 
 @pytest.mark.django_db
-def test_create_existing_airport(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_create_existing_airport(auth_admin):
 
     country = CountryFactory()
 
@@ -86,7 +82,7 @@ def test_create_existing_airport(api_client):
         "contact": existing_airport.contact,
         "country": country.title,
     }
-    response = api_client.post(URL_AIRPORTS, data=payload)
+    response = auth_admin.post(URL_AIRPORTS, data=payload)
     assert response.status_code == 400
 
 
@@ -111,9 +107,7 @@ def test_get_airports_retrieve(api_client):
 
 
 @pytest.mark.django_db
-def test_update_airport(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_update_airport(auth_admin):
 
     airport = AirportsFactory()
     country = CountryFactory()
@@ -123,7 +117,7 @@ def test_update_airport(api_client):
         "contact": "UpdatedContact",
         "country": country.title,
     }
-    response = api_client.put(f"{URL_AIRPORTS}{airport.id}/", data=payload)
+    response = auth_admin.put(f"{URL_AIRPORTS}{airport.id}/", data=payload)
     assert response.status_code == 200
     assert response.data["title"] == "UpdatedAirport"
     assert response.data["address"] == "UpdatedAddress"
@@ -132,12 +126,10 @@ def test_update_airport(api_client):
 
 
 @pytest.mark.django_db
-def test_delete_airport(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
+def test_delete_airport(auth_admin):
 
     airport = AirportsFactory()
-    response = api_client.delete(f"{URL_AIRPORTS}{airport.id}/")
+    response = auth_admin.delete(f"{URL_AIRPORTS}{airport.id}/")
     assert response.status_code == 204
-    get_response = api_client.get(f"{URL_AIRPORTS}{airport.id}/")
+    get_response = auth_admin.get(f"{URL_AIRPORTS}{airport.id}/")
     assert get_response.status_code == 404

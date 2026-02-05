@@ -1,6 +1,7 @@
 import pytest
 from airplanes.tests.factories import AirlinesFactory
 from airports.tests.factories import AirportsFactory
+from conftest import api_client
 from users.tests.factories import UserFactory
 from django.urls import reverse
 
@@ -48,10 +49,7 @@ def test_create_airlines_permission(api_client, user_type, status):
 
 
 @pytest.mark.django_db
-def test_create_airlines_existing_title(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
-
+def test_create_airlines_existing_title(auth_admin):
     existing_airline = AirlinesFactory()
     airlines_data = AirlinesFactory.build(title=existing_airline.title)
     payload = {
@@ -61,16 +59,13 @@ def test_create_airlines_existing_title(api_client):
         "slogan": airlines_data.slogan,
         "airport": existing_airline.airport.title,
     }
-    response = api_client.post(URL_AIRLINES, data=payload)
+    response = auth_admin.post(URL_AIRLINES, data=payload)
     assert response.status_code == 400
     assert "title" in response.data
 
 
 @pytest.mark.django_db
-def test_create_airlines_invalid_airport(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
-
+def test_create_airlines_invalid_airport(auth_admin):
     airlines_data = AirlinesFactory.build()
     payload = {
         "title": airlines_data.title,
@@ -79,7 +74,7 @@ def test_create_airlines_invalid_airport(api_client):
         "slogan": airlines_data.slogan,
         "airport": "NonExistentAirport",
     }
-    response = api_client.post(URL_AIRLINES, data=payload)
+    response = auth_admin.post(URL_AIRLINES, data=payload)
     assert response.status_code == 400
 
 
@@ -105,10 +100,7 @@ def test_get_airlines_retrieve(api_client):
 
 
 @pytest.mark.django_db
-def test_update_airlines(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
-
+def test_update_airlines(auth_admin):
     airline = AirlinesFactory()
     new_airport = AirportsFactory()
     payload = {
@@ -118,7 +110,7 @@ def test_update_airlines(api_client):
         "slogan": "UpdatedSlogan",
         "airport": new_airport.title,
     }
-    response = api_client.put(f"{URL_AIRLINES}{airline.id}/", data=payload)
+    response = auth_admin.put(f"{URL_AIRLINES}{airline.id}/", data=payload)
     assert response.status_code == 200
     assert response.data["title"] == "UpdatedAirline"
     assert response.data["detail"] == "UpdatedDetail"
@@ -128,13 +120,10 @@ def test_update_airlines(api_client):
 
 
 @pytest.mark.django_db
-def test_delete_airlines(api_client):
-    admin = UserFactory(is_staff=True)
-    api_client.force_authenticate(user=admin)
-
+def test_delete_airlines(auth_admin):
     airline = AirlinesFactory()
-    response = api_client.delete(f"{URL_AIRLINES}{airline.id}/")
+    response = auth_admin.delete(f"{URL_AIRLINES}{airline.id}/")
     assert response.status_code == 204
 
-    get_response = api_client.get(f"{URL_AIRLINES}{airline.id}/")
+    get_response = auth_admin.get(f"{URL_AIRLINES}{airline.id}/")
     assert get_response.status_code == 404
