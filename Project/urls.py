@@ -18,8 +18,8 @@ from .settings import DEBUG
 
 router = DefaultRouter()
 
-router.register(r'airlines', AirlinesViewSet)
-router.register(r'airplanes', AirplanesViewSet)
+router.register(r'airlines', AirlinesViewSet, basename='airlines')
+router.register(r'airplanes', AirplanesViewSet, basename='airplanes')
 router.register(r'flights', FlightsViewSet)
 router.register(r'tickets', TicketsViewSet)
 
