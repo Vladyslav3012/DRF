@@ -27,6 +27,9 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
     tickets_count_economy = serializers.IntegerField(min_value=0, max_value=100)
     tickets_count_business = serializers.IntegerField(min_value=0, max_value=100)
     tickets_count_first = serializers.IntegerField(min_value=0, max_value=100)
+    average_price = serializers.DecimalField(max_digits=10, decimal_places=2,
+                                              read_only=True)
+    total_tickets = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flights
@@ -37,51 +40,68 @@ class FlightsRetrieveSerializer(serializers.ModelSerializer):
                   'ticket_first_price',
                   'tickets_count_economy', 'tickets_count_business',
                   'tickets_count_first', 'total_tickets',
-                  'airplanes']
+                  'airplanes', 'average_price']
 
     def validate(self, attrs):
+        def get_data(field_name, default=None):
+            val = attrs.get(field_name)
+            if val is None and self.instance:
+                val = getattr(self.instance, field_name)
+            return val if val is not None else default
 
-        economy_tickets = attrs.get('tickets_count_economy', 0)
-        business_tickets = attrs.get('tickets_count_business', 0)
-        first_tickets = attrs.get('tickets_count_first', 0)
+        economy_tickets = get_data('tickets_count_economy', 0)
+        business_tickets = get_data('tickets_count_business', 0)
+        first_tickets = get_data('tickets_count_first', 0)
+
         total_tickets = sum([economy_tickets, business_tickets, first_tickets])
-        airplanes = attrs.get('airplanes')
 
-        if attrs.get('time_departure') > attrs.get('time_arrival'):
-            logger.error("Departure time > arrival time")
-            raise serializers.ValidationError("Departure time cannot be "
-                                              "later than arrival time.")
+        time_departure = get_data('time_departure')
+        time_arrival = get_data('time_arrival')
 
-        if attrs.get('city_departure').lower() == attrs.get('city_arrival').lower():
-            logger.error("city departure == city arrival")
-            raise serializers.ValidationError("The arrival location must be different"
-                                              "from the departure location")
+        city_departure = get_data('city_departure')
+        city_arrival = get_data('city_arrival')
 
-        if total_tickets > airplanes.total_seats:
-            logger.error(f"{total_tickets} cannot be more than "
-                         f"airplanes total seats{airplanes.total_seats}")
-            raise serializers.ValidationError("The number of tickets cannot be more"
-                                              "than the number of seats on board")
+        airplanes = get_data('airplanes', None)
 
-        if business_tickets > airplanes.business_class_seats:
-            logger.error(f"Count business tickets {business_tickets}"
-                         f" more than airplanes business seats"
-                         f" {airplanes.business_class_seats}")
-            raise serializers.ValidationError("Number of business tickets "
-                                              "exceeds airplane business seats")
+        if time_departure and time_arrival:
+            if time_departure > time_arrival:
+                logger.error("Departure time > arrival time")
+                raise serializers.ValidationError("Departure time cannot be "
+                                                  "later than arrival time.")
 
-        if first_tickets > airplanes.first_class_seats:
-            logger.error(f"Count first tickets {first_tickets}"
-                         f" more than airplanes first seats"
-                         f" {airplanes.first_class_seats}")
-            raise serializers.ValidationError("Number of first class tickets "
-                                              "exceeds airplane first class seats")
-        if economy_tickets > airplanes.economy_class_seats:
-            logger.error(f"Count economy tickets {economy_tickets}"
-                         f" more than airplanes economy seats"
-                         f" {airplanes.economy_class_seats}")
-            raise serializers.ValidationError("Number of economy tickets "
-                                              "exceeds airplane economy seats")
+        if city_arrival and city_departure:
+            if city_departure.lower() == city_arrival.lower():
+                logger.error("city departure == city arrival")
+                raise serializers.ValidationError("The arrival location must be different"
+                                                  "from the departure location")
+
+        if airplanes:
+            if total_tickets > airplanes.total_seats:
+                logger.error(f"{total_tickets} cannot be more than "
+                             f"airplanes total seats{airplanes.total_seats}")
+                raise serializers.ValidationError("The number of tickets cannot be more"
+                                                  "than the number of seats on board")
+
+            if economy_tickets > airplanes.economy_class_seats:
+                logger.error(f"Count economy tickets {economy_tickets}"
+                             f" more than airplanes economy seats"
+                             f" {airplanes.economy_class_seats}")
+                raise serializers.ValidationError("Number of economy tickets "
+                                                  "exceeds airplane economy seats")
+
+            if business_tickets > airplanes.business_class_seats:
+                logger.error(f"Count business tickets {business_tickets}"
+                             f" more than airplanes business seats"
+                             f" {airplanes.business_class_seats}")
+                raise serializers.ValidationError("Number of business tickets "
+                                                  "exceeds airplane business seats")
+
+            if first_tickets > airplanes.first_class_seats:
+                logger.error(f"Count first tickets {first_tickets}"
+                             f" more than airplanes first seats"
+                             f" {airplanes.first_class_seats}")
+                raise serializers.ValidationError("Number of first class tickets "
+                                                  "exceeds airplane first class seats")
 
         if total_tickets == 0:
             logger.error("Total tickets == 0")

@@ -36,7 +36,7 @@ class Flights(models.Model):
         all_price = [self.ticket_economy_price,
                      self.ticket_first_price,
                      self.ticket_business_price]
-        total_price = [price for price in all_price if price > 0]
+        total_price = [Decimal(price) for price in all_price if float(price) > 0]
         if not total_price:
             return None
 
