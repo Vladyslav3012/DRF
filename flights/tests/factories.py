@@ -22,3 +22,14 @@ class FlightsFactory(factory.django.DjangoModelFactory):
     ticket_business_price = "15.00"
     ticket_first_price = "20.00"
     airplanes = factory.SubFactory(AirplanesFactory)
+
+
+class TicketFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = Ticket
+        skip_postgeneration_save = True
+
+    ticket_class = Ticket.ClassChoice.ECONOMY
+    seat_number = factory.Sequence(lambda n: n + 1)
+    flight = factory.SubFactory(FlightsFactory)

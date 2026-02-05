@@ -21,7 +21,7 @@ router = DefaultRouter()
 router.register(r'airlines', AirlinesViewSet, basename='airlines')
 router.register(r'airplanes', AirplanesViewSet, basename='airplanes')
 router.register(r'flights', FlightsViewSet, basename='flight')
-router.register(r'tickets', TicketsViewSet)
+router.register(r'tickets', TicketsViewSet, basename='ticket')
 
 
 urlpatterns = [
