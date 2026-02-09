@@ -178,6 +178,7 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", 'key')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://else-semisolemn-meta.ngrok-free.dev",
+    'https://airport-api-ydy0.onrender.com',
 ]
 
 LOGGING = {
