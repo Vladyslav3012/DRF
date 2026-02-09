@@ -87,7 +87,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("DATABASE_NAME", 'Airport'),
         'USER': os.environ.get("DATABASE_USER", 'postgres'),
-        'PASSWORD': os.environ["DATABASE_PASSWORD"],
+        'PASSWORD': os.environ.get("DATABASE_PASSWORD", 'password'),
         'HOST': os.environ.get("DATABASE_HOST", "db"),
         'PORT': os.environ.get("DATABASE_PORT", '5432'),
     }
@@ -167,14 +167,14 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=int(os.environ["ACCESS_TOKEN_LIFETIME"])),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ["REFRESH_TOKEN_LIFETIME"])),
-    "AUTH_HEADER_TYPES": (os.environ["AUTH_HEADER_TYPES"],),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("ACCESS_TOKEN_LIFETIME", 5))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("REFRESH_TOKEN_LIFETIME", 30))),
+    "AUTH_HEADER_TYPES": (os.environ.get("AUTH_HEADER_TYPES", 'Bearer'),),
 }
 
-STRIPE_PUBLIC_KEY = os.environ["STRIPE_PUBLIC_KEY"]
-STRIPE_SECRET_KEY = os.environ["STRIPE_SECRET_KEY"]
-STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", 'key')
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", 'key')
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", 'key')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://else-semisolemn-meta.ngrok-free.dev",
@@ -221,28 +221,28 @@ LOGGING = {
 
 }
 
-SECRET_TOKEN_TO_WEBHOOK = os.environ['SECRET_TOKEN_TO_WEBHOOK']
+SECRET_TOKEN_TO_WEBHOOK = os.environ.get('SECRET_TOKEN_TO_WEBHOOK', 'key')
 
 if DEBUG:
     INSTALLED_APPS += ["silk"]
     MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
 
 
-GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
+GEMINI_SECRET_KEY = (os.environ.get('GEMINI_SECRET_KEY', 'key'))
 CORS_ALLOW_ALL_ORIGINS = True
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', "key")
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD' 'key')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', "key")
 
-CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
-CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'key')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', "key")
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
