@@ -17,4 +17,4 @@ RUN python manage.py collectstatic --no-input
 
 RUN chmod +x entrypoint.sh
 
-CMD ["./run.sh"]
+CMD ["./entrypoint.sh"]
