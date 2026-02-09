@@ -120,9 +120,6 @@ def webhook_check(request, token):
     session = event["data"]["object"]
     session_id = session["id"]
 
-    customer_detail = session.get('customer_details', {})
-    email_stripe = customer_detail.get('email')
-
     meta = session.get("metadata", {})
     order_id = meta.get("order_id")
     payment_id = meta.get("payment_id")
@@ -140,6 +137,10 @@ def webhook_check(request, token):
 
     event_type = event.get("type")
     if event_type == "checkout.session.completed":
+
+        customer_detail = session.get('customer_details', {})
+        email_stripe = customer_detail.get('email')
+
         updated = Order.objects.filter(order_id=order_id,
                                        stripe_checkout_session=session_id
                                        ).update(status="Confirmed")
