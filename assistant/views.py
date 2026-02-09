@@ -41,4 +41,3 @@ class GeminiChatDetailView(APIView):
 
 def chat_page(request, chat_id=None):
     return render(request, "chat.html", {"chat_id": str(chat_id)})
-

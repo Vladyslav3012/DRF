@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 class CustomUserRegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=100)
     username = serializers.CharField(max_length=50)
-    age = serializers.IntegerField(min_value=1, max_value=120)
+    age = serializers.IntegerField(min_value=1, max_value=120,
+                                   required=False)
     password = serializers.CharField(min_length=8,
                                      write_only=True,
                                      max_length=50)
@@ -70,14 +71,13 @@ class RefreshOTPSerializer(serializers.Serializer):
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(min_length=8,
-                                     max_length=100, write_only=True)
+                                         max_length=100, write_only=True)
     new_password = serializers.CharField(min_length=8,
-                                     max_length=100, write_only=True)
+                                         max_length=100, write_only=True)
 
     def validate_new_password(self, value):
         validate_password(value)
         return value
-
 
     def validate_old_password(self, value):
         user = self.context['request'].user
@@ -107,7 +107,6 @@ class SetNewPasswordWithOTPSerializer(serializers.Serializer):
         validate_password(value)
         return value
 
-
     def validate(self, attrs):
         email = attrs.get('email')
 
@@ -119,4 +118,3 @@ class SetNewPasswordWithOTPSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
-

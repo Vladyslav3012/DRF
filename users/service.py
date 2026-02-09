@@ -30,11 +30,11 @@ def get_user_order(user_id: int) -> List[Dict[str, Any]]:
         for ticket in order.tickets.all():
             ticket_data.append(
                 {
-                "Ticket": ticket.id,
-                "Fight": ticket.flight.id,
-                "Seat": ticket.seat_number,
-                "Class": ticket.ticket_class,
-            })
+                    "Ticket": ticket.id,
+                    "Fight": ticket.flight.id,
+                    "Seat": ticket.seat_number,
+                    "Class": ticket.ticket_class,
+                })
         res.append({
             "Order": str(order.order_id),
             "Total price": float(order.total_price),
@@ -44,4 +44,3 @@ def get_user_order(user_id: int) -> List[Dict[str, Any]]:
         })
 
     return res
-

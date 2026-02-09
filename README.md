@@ -4,6 +4,9 @@
 ![Django](https://img.shields.io/badge/Django-6.0-092E20?style=flat&logo=django&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker&logoColor=white)
 ![Postgres](https://img.shields.io/badge/PostgreSQL-15-316192?style=flat&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=flat&logo=redis&logoColor=white)
+![Celery](https://img.shields.io/badge/celery-%2337814A.svg?style=flat&logo=celery&logoColor=white)
+![Pytest](https://img.shields.io/badge/pytest-%23ffffff.svg?style=flat&logo=pytest&logoColor=2f96e4)
 
 **Backend system for managing airport logistics, flights, tickets, and passenger transport.**
 
@@ -18,17 +21,24 @@ The project is developed based on **Django 6.0**. The system ensures a full tick
 * **Django 6.0** — main framework.
 * **Django REST Framework (DRF)** — REST API.
 * **PostgreSQL 15** — database.
-* **Simple JWT** — authentication.
 
 ### 🔹 Real-time & AI
-* **Django Channels (Daphne)** — WebSockets for chats and notifications.
+* **Django Channels (Uvicorn)** — WebSockets for chats and notifications.
 * **Google Gemini (GenAI)** — AI assistant for users.
 
+### 🔹 Task Queue & Caching
+* **Celery** — distributed task queue (background processes, emails).
+* **Redis** — message broker and caching backend.
+
+### 🔹 Quality Assurance (Testing)
+* **Pytest** — framework for unit and integration testing.
+  
 ### 🔹 Integrations & Tools
 * **Stripe** — payment system.
 * **Docker & Docker Compose** — containerization.
 * **DRF Spectacular** — documentation (Swagger).
 * **Django Silk** — SQL query monitoring.
+* **Simple JWT** — JWT token auth
 
 ---
 
@@ -69,6 +79,13 @@ STRIPE_WEBHOOK_SECRET="change me"
 GEMINI_SECRET_KEY="change me"
 SECRET_TOKEN_TO_WEBHOOK="change me"
 NGROK_AUTHTOKEN='change me'
+
+# Celery & Redis
+EMAIL_HOST_USER='youemail@gmail.com'
+EMAIL_HOST_PASSWORD='secretpasswordchangeme'
+
+CELERY_BROKER_URL=''
+CELERY_RESULT_BACKEND=''
 ```
 In Stripe, create a webhook with an additional path parameter, which will be your SECRET_TOKEN_TO_WEBHOOK.
 

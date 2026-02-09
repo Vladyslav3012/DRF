@@ -12,7 +12,6 @@ from assistant.middleware import JwtAuthMiddlewareStack
 from assistant.routing import websocket_urlpatterns
 
 
-
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
     "websocket": AllowedHostsOriginValidator(
