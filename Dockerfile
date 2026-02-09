@@ -13,4 +13,6 @@ COPY . .
 
 RUN python manage.py collectstatic --no-input
 
-CMD ["sh", "-c", "python manage.py migrate  && celery -A Project worker -l info --max-tasks-per-child=1000 && uvicorn Project.asgi:application --host 0.0.0.0 --port 8000"]
+RUN chmod +x run.sh
+
+CMD ["./run.sh"]
