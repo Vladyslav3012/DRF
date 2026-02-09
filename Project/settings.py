@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-NGROK_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+ACTIVE_DOMAIN = 'https://airport-api-ydy0.onrender.com'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -251,7 +251,6 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', "key")
 CELERY_BROKER_URL = redis_local
 CELERY_RESULT_BACKEND = redis_local
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_TASK_ALWAYS_EAGER = True
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

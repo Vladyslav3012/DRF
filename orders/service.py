@@ -17,7 +17,7 @@ from .tasks import send_email_order_task
 
 logger = logging.getLogger(__name__)
 
-YOUR_DOMAIN = settings.NGROK_DOMAIN
+YOUR_DOMAIN = settings.ACTIVE_DOMAIN
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
