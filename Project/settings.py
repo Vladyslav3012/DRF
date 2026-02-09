@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,7 +10,7 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -92,6 +93,10 @@ DATABASES = {
     }
 }
 
+db_from_render = dj_database_url.config(conn_max_age=600)
+
+DATABASES['default'].update(db_from_render)
+
 CACHES = {
     "default": {
         "BACKEND":
@@ -100,7 +105,6 @@ CACHES = {
         "redis://127.0.0.1:6379"
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -240,3 +244,10 @@ DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
 CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

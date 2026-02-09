@@ -4,4 +4,4 @@ echo "Running migrations..."
 python manage.py migrate
 
 echo "Starting server..."
-exec uvicorn Project.asgi:application --host 0.0.0.0 --port 8000 --reload
+exec uvicorn Project.asgi:application --host 0.0.0.0 --port 8000
