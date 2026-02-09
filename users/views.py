@@ -56,11 +56,8 @@ class ActivateUserApiView(generics.GenericAPIView):
 
         email = serializer.validated_data.get('email')
 
-        try:
-            user = CustomUser.objects.filter(email=email).first()
-        except CustomUser.DoesNotExist:
-            logger.info(f"User with {email=} not found")
-            raise ValidationError("User with this email not found")
+        user = get_object_or_404(CustomUser, email=email)
+
         logger.info(f"Email {email} ask a new code to activate")
 
         if user.is_active:
@@ -113,12 +110,8 @@ class RefreshOTPApiView(generics.GenericAPIView):
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
 
-        try:
-            user = CustomUser.objects.filter(email=email).first()
-        except CustomUser.DoesNotExist:
-            logger.info(f"User with {email=} not found")
-            raise ValidationError("User with this email not found")
-        logger.info(f"Email {email} ask a new code to activate")
+        user = get_object_or_404(CustomUser, email=email)
+
         if user.is_active:
             return Response({"msg": "User is already active"}, status=400)
 
@@ -207,11 +200,8 @@ class ChangePasswordRequestOTP(generics.GenericAPIView):
             return Response(serializer.errors, status=400)
 
         email = serializer.validated_data.get('email')
-        try:
-            user = CustomUser.objects.filter(email=email).first()
-        except CustomUser.DoesNotExist:
-            logger.info(f"User with {email=} not found")
-            raise ValidationError("User with this email not found")
+
+        user = get_object_or_404(CustomUser, email=email)
 
         otp = random.randint(10000, 99999)
         if not user:
