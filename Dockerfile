@@ -13,6 +13,6 @@ COPY . .
 
 RUN python manage.py collectstatic --no-input
 
-RUN chmod +x run.sh
+RUN chmod +x entrypoint.sh
 
 CMD ["./run.sh"]
