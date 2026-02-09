@@ -56,7 +56,13 @@ class ActivateUserApiView(generics.GenericAPIView):
 
         email = serializer.validated_data.get('email')
 
-        user = CustomUser.objects.filter(email=email).first()
+        try:
+            user = CustomUser.objects.filter(email=email).first()
+        except CustomUser.DoesNotExist:
+            logger.info(f"User with {email=} not found")
+            raise ValidationError("User with this email not found")
+        logger.info(f"Email {email} ask a new code to activate")
+
         if user.is_active:
             return Response({"msg": "User is already active"}, status=400)
 
@@ -107,8 +113,12 @@ class RefreshOTPApiView(generics.GenericAPIView):
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
 
+        try:
+            user = CustomUser.objects.filter(email=email).first()
+        except CustomUser.DoesNotExist:
+            logger.info(f"User with {email=} not found")
+            raise ValidationError("User with this email not found")
         logger.info(f"Email {email} ask a new code to activate")
-        user = CustomUser.objects.filter(email=email).first()
         if user.is_active:
             return Response({"msg": "User is already active"}, status=400)
 
