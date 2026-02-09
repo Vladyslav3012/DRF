@@ -56,4 +56,4 @@ class AirportsRetrieveApiView(generics.GenericAPIView):
     def delete(self, request, pk):
         airport = get_object_or_404(Airports, pk=pk)
         airport.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)

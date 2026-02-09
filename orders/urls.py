@@ -4,10 +4,10 @@ from .views import OrderListCreateApiView, OrderUpdateApiView, StripeApiView, St
 
 
 urlpatterns = [
-    path('orders/', OrderListCreateApiView.as_view()),
+    path('orders/', OrderListCreateApiView.as_view(), name='orders'),
     path('orders/<str:pk>/', OrderUpdateApiView.as_view()),
     path("check-session/<uuid:order_id>/", StripeApiView.as_view()),
-    path("stripe-webhook/<str:token>/", StripeWebhookAPIView.as_view()),
+    path("stripe-webhook/<str:token>/", StripeWebhookAPIView.as_view(), name='stripe-webhook'),
 ]
 
 if DEBUG:

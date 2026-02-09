@@ -25,6 +25,26 @@ services:
     environment:
       - DATABASE_HOST=db
 
+  celery:
+    build: .
+    command: celery -A Project worker -l info --max-tasks-per-child=1000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    environment:
+      - DATABASE_HOST=db
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   ngrok:
     image: ngrok/ngrok:latest
     restart: unless-stopped
@@ -38,3 +58,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

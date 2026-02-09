@@ -92,6 +92,15 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND":
+            "django.core.cache.backends.redis.RedisCache",
+        "LOCATION":
+        "redis://127.0.0.1:6379"
+    }
+}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -135,13 +144,14 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ],
     'DEFAULT_SCHEMA_CLASS':
-        'drf_spectacular.openapi.AutoSchema'
-    ,
+        'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
           'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_FILTER_BACKENDS':
-        ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_FILTER_BACKENDS': [
+            'django_filters.rest_framework.DjangoFilterBackend'
+    ],
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
 
@@ -226,3 +236,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
+
+CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
+CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

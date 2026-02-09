@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction, models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -14,7 +13,7 @@ from django.utils import timezone
 
 from users.models import CustomUser
 from .models import Payment, Order
-
+from .tasks import send_email_order_task
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +37,9 @@ def stripe_session_check(order, user):
         return session, payment
 
     elif not payment:
-        payment = Payment.objects.create(order=order,
-                                     owner=user,
-                                     price=full_price,
-                                     currency=order.currency)
+        payment = Payment.objects.create(order=order, owner=user,
+                                         price=full_price,
+                                         currency=order.currency)
         logger.info(f"Create new payment #{payment.payment_id} to order")
     else:
         logger.info(f"Payment exists but session expired/missing; "
@@ -95,15 +93,8 @@ def stripe_session_check(order, user):
     html_content = render_to_string('payment_order.html', context)
     text_content = strip_tags(html_content)
     subject = f"You payment to order {order_id}"
-
-    msg = EmailMultiAlternatives(
-        subject=subject,
-        body=text_content,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email]
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    email = [user.email]
+    send_email_order_task.delay_on_commit(subject, text_content, html_content, email)
     return check_session, payment
 
 
@@ -150,7 +141,8 @@ def webhook_check(request, token):
     event_type = event.get("type")
     if event_type == "checkout.session.completed":
         updated = Order.objects.filter(order_id=order_id,
-                             stripe_checkout_session=session_id).update(status="Confirmed")
+                                       stripe_checkout_session=session_id
+                                       ).update(status="Confirmed")
         payment.status_payment = "Confirmed"
         payment.payed_at = timezone.now()
         payment.save(update_fields=["status_payment", "payed_at"])
@@ -172,14 +164,7 @@ def webhook_check(request, token):
         text_content = strip_tags(html_content)
         subject = f"Payment to order #{order_id} success"
 
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=list_email
-        )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
+        send_email_order_task.delay_on_commit(subject, text_content, html_content, list_email)
 
         logger.info(f"Payment {payment.payment_id} success, order_updated={updated}")
 

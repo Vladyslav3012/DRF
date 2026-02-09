@@ -43,7 +43,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     current_user_id = user_id
     formatted_prompt = prompts.SYSTEM_PROMPT.format(current_date=today,
-                                                     current_user=current_user_id)
+                                                    current_user=current_user_id)
 
     for msg in history:
         all_history.append({
