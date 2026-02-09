@@ -97,12 +97,16 @@ db_from_render = dj_database_url.config(conn_max_age=600)
 
 DATABASES['default'].update(db_from_render)
 
+
+redis_local = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")
+if DEBUG:
+    redis_local = "redis://127.0.0.1:6379"
+
 CACHES = {
     "default": {
         "BACKEND":
-            "django.core.cache.backends.redis.RedisCache",
-        "LOCATION":
-        "redis://127.0.0.1:6379"
+        "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": redis_local
     }
 }
 
