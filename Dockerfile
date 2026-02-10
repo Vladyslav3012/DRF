@@ -15,4 +15,6 @@ COPY . .
 
 RUN python manage.py collectstatic --no-input
 
-CMD ["sh", "-c", "python manage.py migrate && uvicorn Project.asgi:application --host 0.0.0.0 --port 8000"]
+RUN chmod +x entrypoint.sh
+
+CMD ["./entrypoint.sh"]

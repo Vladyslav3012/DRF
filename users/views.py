@@ -16,8 +16,7 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           RequestPasswordResetSerializer, SetNewPasswordWithOTPSerializer, RefreshOTPSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
-from .tasks import send_email_task_default
-
+from .tasks import send_email_task_default, send_email_task_celery
 
 User = get_user_model()
 
@@ -132,7 +131,7 @@ class RefreshOTPApiView(generics.GenericAPIView):
                        f"you have 5 min to activate")
             to_email = user.email
 
-            send_email_task_default(subject, message, [to_email])
+            send_email_task_celery.delay_on_commit(subject, message, [to_email])
             return Response({"msg": "New code send to you email"})
         return Response({"msg": "Invalid email or password"}, status=400)
 
@@ -218,7 +217,7 @@ class ChangePasswordRequestOTP(generics.GenericAPIView):
                    f"If you are not asking about this, please ignore this email. \n"
                    f"Your code to reset password: {otp}")
         recipient_list = [email]
-        send_email_task_default(subject, message, recipient_list)
+        send_email_task_celery.delay_on_commit(subject, message, recipient_list)
 
         logger.info(f"Sending OTP code for reset password to {user.username=}")
         return Response({"msg": "We have sent a secret code to your email address."})
