@@ -258,7 +258,7 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_TIMEOUT = 30
 
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', "key")
+DEFAULT_FROM_EMAIL = "stahnukvlad21@gmail.com"
 
 CELERY_BROKER_URL = redis_local
 CELERY_RESULT_BACKEND = redis_local
