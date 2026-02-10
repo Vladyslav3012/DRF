@@ -9,7 +9,7 @@ import socket
 old_getaddrinfo = socket.getaddrinfo
 
 def new_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    if 'gmail.com' in str(host):
+    if 'smtp' in str(host):
         family = socket.AF_INET
     return old_getaddrinfo(host, port, family, type, proto, flags)
 
