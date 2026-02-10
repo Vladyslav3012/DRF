@@ -16,7 +16,7 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           RequestPasswordResetSerializer, SetNewPasswordWithOTPSerializer, RefreshOTPSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
-from .tasks import send_email_task_default, send_email_task_celery
+from .tasks import send_email_task_celery
 
 User = get_user_model()
 
