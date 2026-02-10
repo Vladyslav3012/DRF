@@ -1,6 +1,11 @@
 import logging
 import random
 from datetime import timedelta
+import socket
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -267,3 +272,36 @@ class SetNewPasswordWithOTP(generics.GenericAPIView):
         user.save(update_fields=['otp_try'])
         return Response({"msg": f"You send incorrect code, "
                                 f"please try again, try left: {user.otp_try}"})
+
+
+def test_email_view(request):
+    output = []
+    output.append("<h2>🛠️ Email Debugger</h2>")
+
+    # 1. Перевірка налаштувань
+    output.append(f"<b>Host:</b> {settings.EMAIL_HOST}:{settings.EMAIL_PORT}<br>")
+    output.append(f"<b>User:</b> {settings.EMAIL_HOST_USER}<br>")
+    output.append(f"<b>TLS/SSL:</b> {settings.EMAIL_USE_TLS} / {settings.EMAIL_USE_SSL}<br>")
+
+    # 2. Перевірка DNS (чи працює патч IPv4)
+    try:
+        ip = socket.gethostbyname('smtp.gmail.com')
+        output.append(f"<b>✅ DNS Resolve:</b> {ip} (IPv4)<br>")
+    except Exception as e:
+        output.append(f"<b>❌ DNS Error:</b> {e}<br>")
+
+    # 3. Спроба відправки
+    try:
+        send_mail(
+            'Render Test',
+            'Hello! This is a test from Render via standard Django view.',
+            settings.EMAIL_HOST_USER,
+            [settings.EMAIL_HOST_USER],  # Відправляємо самі собі
+            fail_silently=False,
+        )
+        output.append("<h3>✅ SUCCESS! Email sent.</h3>")
+    except Exception as e:
+        output.append(f"<h3>❌ ERROR: {e}</h3>")
+        output.append(f"<pre>{str(e)}</pre>")
+
+    return HttpResponse("".join(output))
