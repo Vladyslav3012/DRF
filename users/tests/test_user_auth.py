@@ -115,7 +115,7 @@ def test_email_verification_signal(mocker, api_client):
         "password": "testpassword123",
     }
     send_email_mock = mocker.patch(
-        'users.signals.send_email_task.delay_on_commit'
+        'users.signals.send_email_task_celery.delay_on_commit'
     )
     response = api_client.post(url_to_sign, data=payload)
 
