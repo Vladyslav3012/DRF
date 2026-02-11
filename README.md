@@ -23,7 +23,7 @@ The project is developed based on **Django 6.0**. The system ensures a full tick
 * **PostgreSQL 15** — database.
 
 ### 🔹 Real-time & AI
-* **Django Channels (Uvicorn)** — WebSockets for chats and notifications.
+* **Django Channels (Uvicorn)** — WebSockets for chats.
 * **Google Gemini (GenAI)** — AI assistant for users.
 
 ### 🔹 Task Queue & Caching
