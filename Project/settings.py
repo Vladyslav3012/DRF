@@ -3,17 +3,6 @@ from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
-import socket
-
-
-old_getaddrinfo = socket.getaddrinfo
-
-def new_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    if 'smtp' in str(host):
-        family = socket.AF_INET
-    return old_getaddrinfo(host, port, family, type, proto, flags)
-
-socket.getaddrinfo = new_getaddrinfo
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
