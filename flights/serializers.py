@@ -134,29 +134,30 @@ class TicketCreateSerializer(serializers.ModelSerializer):
             )
         ]
 
-        def validate(self, attrs):
-            ticket_class = attrs.get('ticket_class')
-            seat_number = attrs.get('seat_number')
-            flight = attrs.get('flight')\
+    def validate(self, attrs):
+        ticket_class = attrs.get('ticket_class')
+        seat_number = attrs.get('seat_number')
+        flight = attrs.get('flight')
+        airplanes = flight.airplanes
 
-            if ticket_class == "economy":
-                if seat_number > flight.airplanes.economy_class_seats:
-                    logger.error(f"There is no such place on economy #{seat_number}")
-                    raise serializers.ValidationError("Seat number exceeds economy class "
-                                                      "seats on airplane")
+        if ticket_class == "economy":
+            if seat_number > airplanes.economy_class_seats:
+                logger.error(f"There is no such place on economy #{seat_number}")
+                raise serializers.ValidationError("Seat number exceeds economy class "
+                                                  "seats on airplane")
 
-            if ticket_class == "business":
-                if seat_number > flight.airplanes.business_class_seats:
-                    logger.error(f"There is no such place on business #{seat_number}")
-                    raise serializers.ValidationError("Seat number exceeds business "
-                                                      "class seats on airplane")
+        if ticket_class == "business":
+            if seat_number > airplanes.business_class_seats:
+                logger.error(f"There is no such place on business #{seat_number}")
+                raise serializers.ValidationError("Seat number exceeds business "
+                                                  "class seats on airplane")
 
-            if ticket_class == "first":
-                if seat_number > flight.airplanes.first_class_seats:
-                    logger.error(f"There is no such place on first #{seat_number}")
-                    raise serializers.ValidationError("Seat number exceeds "
-                                                      "first class seats on airplane")
-
+        if ticket_class == "first":
+            if seat_number > airplanes.first_class_seats:
+                logger.error(f"There is no such place on first #{seat_number}")
+                raise serializers.ValidationError("Seat number exceeds "
+                                                  "first class seats on airplane")
+        return attrs
 
 class TicketListSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='order.status', read_only=True)
