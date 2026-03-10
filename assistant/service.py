@@ -37,7 +37,7 @@ def create_title(model, user_prompt):
     return user_prompt[:50]
 
 
-def ask_to_gemini(model, user_prompt, history, user_id=None):
+async def ask_to_gemini(model, user_prompt, history, user_id=None):
     all_history = []
 
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -52,7 +52,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
         })
 
     try:
-        chat = client.chats.create(
+        chat = client.aio.chats.create(
             model=model,
             history=all_history,
             config=genai.types.GenerateContentConfig(
@@ -69,7 +69,7 @@ def ask_to_gemini(model, user_prompt, history, user_id=None):
             )
         )
 
-        response = chat.send_message(user_prompt)
+        response = await chat.send_message(user_prompt)
         if response.text:
             return response.text.strip().replace('"', '')
         return "Answer not generated"

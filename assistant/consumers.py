@@ -37,9 +37,14 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
             }))
 
             user_message = await self.save_message(role='user', content=user_prompt)
+            model_name, history = await self.get_session_data(exclude_msg=user_message.id)
 
-            response = await self.get_gemini_response(user_prompt=user_prompt,
-                                                      exclude_msg=user_message.id)
+            response = await ask_to_gemini(
+                model=model_name,
+                user_prompt=user_prompt,
+                history=history,
+                user_id=self.user.id
+            )
             await self.save_message(role='model', content=response)
 
             await self.create_title(user_prompt)
@@ -62,6 +67,16 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
+    def get_session_data(self, exclude_msg=None):
+        session = GeminiChatSession.objects.get(chat_id=self.chat_id)
+        qs = GeminiChatMessage.objects.filter(session=session).order_by('created_at')
+
+        if exclude_msg:
+            qs = qs.exclude(id=exclude_msg)
+
+        return session.model_name, list(qs)
+
+    @database_sync_to_async
     def create_title(self, user_prompt):
         session = GeminiChatSession.objects.get(chat_id=self.chat_id)
         if session.title == "New chat" or not session.title:
@@ -75,17 +90,3 @@ class GeminiSessionConsumer(AsyncWebsocketConsumer):
             return GeminiChatSession.objects.filter(chat_id=pk, user=user).exists()
         except Exception:
             return False
-
-    @database_sync_to_async
-    def get_gemini_response(self, user_prompt, exclude_msg=None):
-        session = GeminiChatSession.objects.get(chat_id=self.chat_id)
-        history = GeminiChatMessage.objects.filter(session=session).order_by('created_at')
-        if exclude_msg:
-            history.exclude(id=exclude_msg)
-        response = ask_to_gemini(
-            model=session.model_name,
-            user_prompt=user_prompt,
-            history=history,
-            user_id=self.user.id
-        )
-        return response

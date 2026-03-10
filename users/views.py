@@ -16,8 +16,7 @@ from .serializers import (CustomUserRegisterSerializer, UserLogInSerializer,
                           RequestPasswordResetSerializer, SetNewPasswordWithOTPSerializer, RefreshOTPSerializer)
 from rest_framework.response import Response
 from rest_framework.request import Request
-from .tasks import send_email_task
-
+from .tasks import send_email_task_celery
 
 User = get_user_model()
 
@@ -56,7 +55,10 @@ class ActivateUserApiView(generics.GenericAPIView):
 
         email = serializer.validated_data.get('email')
 
-        user = CustomUser.objects.filter(email=email).first()
+        user = get_object_or_404(CustomUser, email=email)
+
+        logger.info(f"Email {email} ask a new code to activate")
+
         if user.is_active:
             return Response({"msg": "User is already active"}, status=400)
 
@@ -107,8 +109,8 @@ class RefreshOTPApiView(generics.GenericAPIView):
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
 
-        logger.info(f"Email {email} ask a new code to activate")
-        user = CustomUser.objects.filter(email=email).first()
+        user = get_object_or_404(CustomUser, email=email)
+
         if user.is_active:
             return Response({"msg": "User is already active"}, status=400)
 
@@ -129,7 +131,7 @@ class RefreshOTPApiView(generics.GenericAPIView):
                        f"you have 5 min to activate")
             to_email = user.email
 
-            send_email_task.delay_on_commit(subject, message, [to_email])
+            send_email_task_celery.delay_on_commit(subject, message, [to_email])
             return Response({"msg": "New code send to you email"})
         return Response({"msg": "Invalid email or password"}, status=400)
 
@@ -197,11 +199,8 @@ class ChangePasswordRequestOTP(generics.GenericAPIView):
             return Response(serializer.errors, status=400)
 
         email = serializer.validated_data.get('email')
-        try:
-            user = CustomUser.objects.filter(email=email).first()
-        except CustomUser.DoesNotExist:
-            logger.info(f"User with {email=} not found")
-            raise ValidationError("User with this email not found")
+
+        user = get_object_or_404(CustomUser, email=email)
 
         otp = random.randint(10000, 99999)
         if not user:
@@ -218,7 +217,7 @@ class ChangePasswordRequestOTP(generics.GenericAPIView):
                    f"If you are not asking about this, please ignore this email. \n"
                    f"Your code to reset password: {otp}")
         recipient_list = [email]
-        send_email_task.delay_on_commit(subject, message, recipient_list)
+        send_email_task_celery.delay_on_commit(subject, message, recipient_list)
 
         logger.info(f"Sending OTP code for reset password to {user.username=}")
         return Response({"msg": "We have sent a secret code to your email address."})

@@ -38,7 +38,7 @@ class Flights(models.Model):
                      self.ticket_business_price]
         total_price = [Decimal(price) for price in all_price if float(price) > 0]
         if not total_price:
-            return None
+            return Decimal(0.00)
 
         return sum(total_price) / Decimal(len(total_price))
 

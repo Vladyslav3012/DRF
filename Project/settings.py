@@ -2,20 +2,22 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = os.environ.get("SECRET_KEY", 'xxx')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-NGROK_DOMAIN = 'https://else-semisolemn-meta.ngrok-free.dev'
+ACTIVE_DOMAIN = 'https://airport-api-ydy0.onrender.com'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -84,23 +86,30 @@ ASGI_APPLICATION = "Project.asgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["DATABASE_NAME"],
-        'USER': os.environ["DATABASE_USER"],
-        'PASSWORD': os.environ["DATABASE_PASSWORD"],
+        'NAME': os.environ.get("DATABASE_NAME", 'Airport'),
+        'USER': os.environ.get("DATABASE_USER", 'postgres'),
+        'PASSWORD': os.environ.get("DATABASE_PASSWORD", 'password'),
         'HOST': os.environ.get("DATABASE_HOST", "db"),
         'PORT': os.environ.get("DATABASE_PORT", '5432'),
     }
 }
 
+db_from_render = dj_database_url.config(conn_max_age=600)
+
+DATABASES['default'].update(db_from_render)
+
+
+redis_local = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")
+if DEBUG:
+    redis_local = "redis://127.0.0.1:6379"
+
 CACHES = {
     "default": {
         "BACKEND":
-            "django.core.cache.backends.redis.RedisCache",
-        "LOCATION":
-        "redis://127.0.0.1:6379"
+        "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": redis_local
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -163,17 +172,18 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=int(os.environ["ACCESS_TOKEN_LIFETIME"])),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ["REFRESH_TOKEN_LIFETIME"])),
-    "AUTH_HEADER_TYPES": (os.environ["AUTH_HEADER_TYPES"],),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("ACCESS_TOKEN_LIFETIME", 5))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("REFRESH_TOKEN_LIFETIME", 30))),
+    "AUTH_HEADER_TYPES": (os.environ.get("AUTH_HEADER_TYPES", 'Bearer'),),
 }
 
-STRIPE_PUBLIC_KEY = os.environ["STRIPE_PUBLIC_KEY"]
-STRIPE_SECRET_KEY = os.environ["STRIPE_SECRET_KEY"]
-STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", 'key')
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", 'key')
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", 'key')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://else-semisolemn-meta.ngrok-free.dev",
+    'https://airport-api-ydy0.onrender.com',
 ]
 
 LOGGING = {
@@ -217,26 +227,34 @@ LOGGING = {
 
 }
 
-SECRET_TOKEN_TO_WEBHOOK = os.environ['SECRET_TOKEN_TO_WEBHOOK']
+SECRET_TOKEN_TO_WEBHOOK = os.environ.get('SECRET_TOKEN_TO_WEBHOOK', 'key')
 
 if DEBUG:
     INSTALLED_APPS += ["silk"]
     MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
 
 
-GEMINI_SECRET_KEY = (os.environ['GEMINI_SECRET_KEY'])
+GEMINI_SECRET_KEY = (os.environ.get('GEMINI_SECRET_KEY', 'key'))
 CORS_ALLOW_ALL_ORIGINS = True
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-EMAIL_PORT = 587
+EMAIL_HOST = 'smtp-relay.brevo.com'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', "key")
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'key')
+EMAIL_PORT = 2525
 EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 30
 
-DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
+DEFAULT_FROM_EMAIL = "stahnukvlad21@gmail.com"
 
-CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
-CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
+CELERY_BROKER_URL = redis_local
+CELERY_RESULT_BACKEND = redis_local
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

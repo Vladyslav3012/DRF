@@ -1,11 +1,35 @@
+import logging
 from typing import List, Dict, Any
+
+from channels.db import database_sync_to_async
+
+from Project.settings import ACTIVE_DOMAIN
 from .models import Flights
 
+logger = logging.getLogger(__name__)
+base_url = f'{ACTIVE_DOMAIN}/api/docs/#/Orders/v1_orders_create'
 
-base_url = 'https://else-semisolemn-meta.ngrok-free.dev/api/docs/#/Orders/v1_orders_create'
+
+@database_sync_to_async
+def _get_flights_from_db():
+    active_flights = Flights.objects.filter(flight_status=Flights.StatusChoice.SCHEDULED)
+
+    results = []
+    for flight in active_flights:
+        results.append({
+            "id": flight.id,
+            "City_departure": flight.city_departure,
+            "Time departure": flight.time_departure.strftime("%d-%m-%Y %H:%M:%S"),
+            "City arrival": flight.city_arrival,
+            "Time arrival": flight.time_arrival.strftime("%d-%m-%Y %H:%M:%S"),
+            "Average price": float(flight.average_price),
+            "Count free ticket": flight.total_tickets,
+            "booking_link": base_url
+        })
+    return results
 
 
-def get_active_flight() -> List[Dict[str, Any]]:
+async def get_active_flight() -> List[Dict[str, Any]]:
     """
         Retrieves a list of all currently scheduled (active) flights.
         Use this tool when the user asks about available flights generally, without specific filters.
@@ -13,22 +37,18 @@ def get_active_flight() -> List[Dict[str, Any]]:
         Returns:
             List[Dict]: A list of flight dictionaries containing details.
     """
-    active_flight = Flights.objects.filter(flight_status=Flights.StatusChoice.SCHEDULED)
-    if not active_flight.exists():
-        return []
-    response = []
-    for flight in active_flight:
-        response.append({"id": flight.id,
-                         "City_departure": flight.city_departure,
-                         "Time departure": flight.time_departure.strftime("%d-%m-%Y %H:%M:%S"),
-                         "City arrival": flight.city_arrival,
-                         "Time arrival": flight.time_arrival.strftime("%d-%m-%Y %H:%M:%S"),
-                         "Average price": float(flight.average_price),
-                         "Count free ticket": flight.total_tickets,
-                         "booking_link": base_url
-                         })
+    """
+        Retrieves a list of all currently scheduled (active) flights.
+        Use this tool when the user asks about available flights generally.
+        """
+    try:
+        flights_data = await _get_flights_from_db()
 
-    return response
+        return flights_data
+
+    except Exception as e:
+        logger.exception(f"Gemini tools error {e}")
+        return []
 
 
 def search_flight(city_departure: str | None = None,
